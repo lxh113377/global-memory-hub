@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: #e8e6e3;
+    background:
+      radial-gradient(1100px 560px at 12% -8%, rgba(255, 107, 26, 0.16), transparent 60%),
+      radial-gradient(950px 520px at 92% -4%, rgba(212, 160, 23, 0.12), transparent 55%),
+      #0b0d12;
+    min-height: 100vh;
+  }
+
+  code {
+    font-family: Consolas, "Cascadia Mono", monospace;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-xl border border-amber-500/20 bg-white/[0.04] backdrop-blur-md;
+  }
+
+  .brand-gradient-text {
+    @apply bg-gradient-to-r from-[#d4a017] to-[#ff6b1a] bg-clip-text text-transparent;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#d4a017] to-[#ff6b1a] px-4 py-2 text-sm font-semibold text-black shadow-[0_0_14px_rgba(255,107,26,0.35)] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-white/[0.03] px-4 py-2 text-sm font-medium text-amber-200/90 transition-all hover:border-amber-400/60 hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "schema": "fenjue-platforms-v1",
+  "version": "1.0.0",
+  "_note": "Single source of truth for all 9 platform mount plans. Go agent and web frontend both derive from this file at RUNTIME (no compile-time generation). Paths use ~ / %USERPROFILE% / $HOME expansion only; personal absolute paths are forbidden. support: ga = verified, beta = entered service but consumption behavior not yet verified.",
+  "roots": {
+    "memory": "~/.fenjue/memory",
+    "skills": "~/.fenjue/skills"
+  },
+  "site": {
+    "primary": "https://global-memory-hub.example.com",
+    "mirror": "https://global-memory-hub.pages.dev",
+    "local": "http://127.0.0.1:7799"
+  },
+  "platforms": [
+    {
+      "id": "wb",
+      "label": "WorkBuddy",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.workbuddy",
+      "mounts": [
+        { "kind": "link", "from": "~/.workbuddy/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.workbuddy/memory_content", "to": "<memory>" }
+      ],
+      "inject": [{ "path": "~/.workbuddy/AGENTS.md", "mode": "marker" }]
+    },
+    {
+      "id": "tr",
+      "label": "TRAE SOLO CN",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.trae-cn",
+      "mounts": [
+        { "kind": "link", "from": "~/.trae-cn/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.trae-cn/memory_content", "to": "<memory>" }
+      ],
+      "inject": [{ "path": "~/.trae-cn/AGENTS.md", "mode": "marker" }]
+    },
+    {
+      "id": "cx",
+      "label": "Codex CLI",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.codex",
+      "mounts": [
+        { "kind": "link", "from": "~/.codex/memory_content", "to": "<memory>" },
+        { "kind": "mirror", "from": "~/.agents/skills", "to": "<skills>" }
+      ],
+      "inject": [{ "path": "~/.codex/AGENTS.md", "mode": "marker" }],
+      "notes": "skills is a physical mirror (real copy, not a link). Soft-close for mirror means stop syncing; UI must label this differently."
+    },
+    {
+      "id": "hm",
+      "label": "Hermes Agent",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "<HERMES_HOME>",
+      "homeEnv": "HERMES_HOME",
+      "homeDefault": "%LOCALAPPDATA%/hermes",
+      "mounts": [
+        { "kind": "link", "from": "<HERMES_HOME>/memories", "to": "<memory>" },
+        { "kind": "per-skill", "from": "<HERMES_HOME>/skills/global-skills", "to": "<skills>" }
+      ],
+      "inject": [{ "path": "<HERMES_HOME>/AGENTS.md", "mode": "marker" }],
+      "notes": "per-skill tree = one symlink per skill entry (~160 items). Enable/disable is a batch op: concurrency cap 8, build in temp dir then rename into place, rollback on any failure. HERMES_HOME missing must warn explicitly, never silently fail."
+    },
+    {
+      "id": "zc",
+      "label": "ZCode",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.zcode",
+      "mounts": [
+        { "kind": "link", "from": "~/.zcode/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.zcode/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "~/.zcode/AGENTS.md", "mode": "marker" },
+        { "path": "~/.zcode/SOUL.md", "mode": "marker" }
+      ]
+    },
+    {
+      "id": "oc",
+      "label": "OpenCode",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.config/opencode",
+      "mounts": [
+        { "kind": "link", "from": "~/.config/opencode/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.config/opencode/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "~/.config/opencode/AGENTS.md", "mode": "marker" },
+        { "path": "~/.config/opencode/SOUL.md", "mode": "marker" }
+      ]
+    },
+    {
+      "id": "qd",
+      "label": "Qoder CN",
+      "support": "ga",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.qoder-cn",
+      "mounts": [
+        { "kind": "link", "from": "~/.qoder-cn/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.qoder-cn/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "~/.qoder-cn/AGENTS.md", "mode": "marker" },
+        { "path": "~/.qoder-cn/SOUL.md", "mode": "marker" }
+      ]
+    },
+    {
+      "id": "mm",
+      "label": "MiniMax Code",
+      "support": "beta",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.minimax",
+      "mounts": [
+        { "kind": "link", "from": "~/.minimax/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.minimax/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "~/.minimax/AGENTS.md", "mode": "marker" },
+        { "path": "~/.minimax/SOUL.md", "mode": "marker" }
+      ],
+      "notes": "Entered service 2026-10-01; program-side loading behavior not yet verified. No native skills/memory dirs to back up (config memory.enabled=false)."
+    },
+    {
+      "id": "ds",
+      "label": "DeepSeek Harness Desktop",
+      "support": "beta",
+      "os": ["windows", "darwin", "linux"],
+      "home": "~/.dsh",
+      "mounts": [
+        { "kind": "link", "from": "~/.dsh/skills", "to": "<skills>" },
+        { "kind": "link", "from": "~/.dsh/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "~/.dsh/AGENTS.md", "mode": "marker" },
+        { "path": "~/.dsh/SOUL.md", "mode": "marker" }
+      ],
+      "notes": "Entered service 2026-10-01; program-side loading behavior not yet verified. No native skills/memory dirs to back up."
+    }
+  ]
+}

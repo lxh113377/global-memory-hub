@@ -1,0 +1,17 @@
+# Build artifacts
+agent/fenjue-agent
+agent/fenjue-agent.exe
+agent/cmd/fenjue-agent/dist/
+web/dist/!(*.html)
+web/node_modules/
+
+# Local state
+.fenjue/
+_trash/
+_temp/
+_bak/
+archive/
+
+# OS / editor
+Thumbs.db
+.DS_Store

@@ -1,0 +1,11 @@
+# AI search ignore list (per project convention: load before any Grep/Glob/find)
+__pycache__/
+*.pyc
+.git/
+node_modules/
+web/dist/
+_trash/
+_temp/
+_bak/
+archive/
+.fenjue/
