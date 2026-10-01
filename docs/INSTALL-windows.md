@@ -38,7 +38,7 @@ mkdir "%USERPROFILE%\fenjue"
 ```
 fenjue-agent 0.1.0 (windows/amd64)
 platforms: <repo>\platforms.json
-token file: C:\Users\<你>\.fenjue\token
+token file: %USERPROFILE%\.fenjue\token
 Handshake: http://127.0.0.1:7799/console#token=<随机十六进制>
 listening on 127.0.0.1:7799
 ```
