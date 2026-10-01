@@ -1,8 +1,9 @@
 # Build artifacts
 agent/fenjue-agent
 agent/fenjue-agent.exe
-agent/cmd/fenjue-agent/dist/
-web/dist/!(*.html)
+agent/cmd/fenjue-agent/dist/*
+!agent/cmd/fenjue-agent/dist/.gitkeep
+web/dist/
 web/node_modules/
 
 # Local state
