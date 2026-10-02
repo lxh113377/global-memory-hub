@@ -6,12 +6,19 @@ agent/cmd/fenjue-agent/dist/*
 web/dist/
 web/node_modules/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Local state
 .fenjue/
 _trash/
 _temp/
 _bak/
 archive/
+
+# 维护者本地的个人化消毒规则 (可能含个人标识字面量, 绝不入库)
+scripts/sanitize.local.json
 
 # OS / editor
 Thumbs.db
