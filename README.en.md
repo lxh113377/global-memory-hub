@@ -217,6 +217,8 @@ Full eight-dimension comparison, with quantified gaps and the improvement backlo
 - [Changelog](docs/CHANGELOG.md)
 - [Skill tiers](docs/SKILLS-TIERS.md) - what may be distributed publicly, and why
 - [Roadmap: open work and next steps](docs/ROADMAP.md)
+- [HTTP API](docs/API.md) - every endpoint: auth, requests/responses, status codes, and what the four security gates mean for a caller
+- [Measured performance](docs/PERFORMANCE.md) - three-scale benchmark data, complexity attribution, and the limits of those numbers
 - [Benchmark report - 2026-10-02](docs/BENCHMARK-2026-10-02.md) - eight-dimension comparison
 
 > **Language note.** The three platform install guides are currently written in Chinese only. Full English localisation of the documentation is tracked as G9 in the [roadmap](docs/ROADMAP.md#2-优先级排序); this README pair is the first step of it.
