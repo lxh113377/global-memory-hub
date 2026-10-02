@@ -1,0 +1,79 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: agent/go.mod
+      - name: go vet
+        run: cd agent && go vet ./...
+      - name: go test (seed pack included)
+        run: cd agent && go test ./...
+
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: agent/go.mod
+      - name: build agent (embed placeholder dist is enough)
+        run: cd agent && go build -o smoke-agent ./cmd/fenjue-agent
+      - name: e2e smoke on fake platform (never touches real mounts)
+        run: |
+          set -e
+          D="$RUNNER_TEMP/fenjue-smoke"
+          mkdir -p "$D"
+          cat > "$D/platforms.json" <<EOF
+          {
+            "schema": "fenjue-platforms-v1",
+            "version": "0.0.0-ci",
+            "roots": { "memory": "$D/memory", "skills": "$D/skills" },
+            "site": { "primary": "https://example.invalid", "mirror": "", "local": "http://127.0.0.1:7799" },
+            "platforms": [
+              { "id": "t1", "label": "SmokeTest", "support": "ga",
+                "os": ["windows", "darwin", "linux"],
+                "home": "$D/t1home",
+                "mounts": [ { "kind": "link", "from": "$D/t1home/skills", "to": "<skills>" } ],
+                "inject": [ { "path": "$D/t1home/AGENTS.md", "mode": "marker" } ] }
+            ]
+          }
+          EOF
+          if [ "$RUNNER_OS" = "windows" ]; then BIN="./agent/smoke-agent.exe"; else BIN="./agent/smoke-agent"; fi
+          "$BIN" enable t1 --platforms "$D/platforms.json" > enable.out
+          grep -q "seeded" enable.out || { cat enable.out; exit 1; }
+          "$BIN" verify --platforms "$D/platforms.json" > verify.out
+          grep -q "total=2 ok=2" verify.out || { cat verify.out; exit 1; }
+          test -f "$D/memory/MEMORY.md"
+          test -f "$D/memory/meta/memory_index.md"
+          test -f "$D/skills/brainstorming/SKILL.md"
+          "$BIN" disable t1 --platforms "$D/platforms.json" > /dev/null
+          "$BIN" enable t1 --platforms "$D/platforms.json" > re-enable.out
+          grep -q "zero-overwrite" re-enable.out || { cat re-enable.out; exit 1; }
+          echo "smoke PASS ($RUNNER_OS)"
+
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: platform parity (advisory; private source absent in CI => UNVERIFIED, report only)
+        continue-on-error: true
+        run: python3 scripts/platform_parity.py --private /nonexistent/truth_constants.json || true
