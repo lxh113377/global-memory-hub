@@ -1,0 +1,58 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  goos: linux,   goarch: amd64, ext: "" }
+          - { os: ubuntu-latest,  goos: linux,   goarch: arm64, ext: "" }
+          - { os: macos-latest,   goos: darwin,  goarch: amd64, ext: "" }
+          - { os: macos-latest,   goos: darwin,  goarch: arm64, ext: "" }
+          - { os: windows-latest, goos: windows, goarch: amd64, ext: ".exe" }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: build web console
+        run: cd web && npm ci && npm run build
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: agent/go.mod
+      - name: embed web dist
+        run: mkdir -p agent/cmd/fenjue-agent/dist && cp -r web/dist/. agent/cmd/fenjue-agent/dist/
+      - name: go build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: cd agent && go build -trimpath -ldflags "-s -w" -o fenjue-agent-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} ./cmd/fenjue-agent
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fenjue-agent-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: agent/fenjue-agent-*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+      - name: create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "fenjue-agent $GITHUB_REF_NAME" --generate-notes
