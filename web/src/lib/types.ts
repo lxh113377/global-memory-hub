@@ -63,3 +63,36 @@ export interface MutationResult {
   backupId: string;
   changes: ChangeEntry[];
 }
+
+/** One skill entry of GET /api/skills */
+export interface SkillEntry {
+  id: string;
+  name: string;
+  description: string;
+}
+
+/** GET /api/skills */
+export interface SkillsResponse {
+  ok: boolean;
+  roots: { memory: string; skills: string };
+  skills: SkillEntry[];
+  total: number;
+  note?: string;
+}
+
+/** POST /api/verify */
+export interface VerifyReport {
+  total: number;
+  ok: number;
+  broken: string[];
+  mismatch: string[];
+  missing: string[];
+}
+
+/** POST /api/roots */
+export interface RootsSetResult {
+  ok: boolean;
+  applied: boolean;
+  note: string;
+  roots: Record<string, string>;
+}

@@ -185,8 +185,13 @@ func currentToken() (string, error) {
 		return "", fmt.Errorf("generate token: %w", err)
 	}
 	token := hex.EncodeToString(b)
-	if err := safeio.WriteFile(safeio.TokenPath(), []byte(token+"\n"), 0o600); err != nil {
+	tokenPath := safeio.TokenPath()
+	if err := safeio.WriteFile(tokenPath, []byte(token+"\n"), 0o600); err != nil {
 		return "", fmt.Errorf("write token file: %w", err)
+	}
+	// G5: NTFS 上 0o600 不生效, Windows 下显式收紧 ACL; 失败只告警不阻塞。
+	if err := safeio.HardenTokenACL(tokenPath); err != nil {
+		logx.Warn("token acl harden: %v", err)
 	}
 	return token, nil
 }

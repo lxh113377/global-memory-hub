@@ -34,7 +34,7 @@
         { "kind": "link", "from": "~/.trae-cn/skills", "to": "<skills>" },
         { "kind": "link", "from": "~/.trae-cn/memory_content", "to": "<memory>" }
       ],
-      "inject": [{ "path": "~/.trae-cn/AGENTS.md", "mode": "marker" }]
+      "inject": [{ "path": "~/.trae-cn/SOUL.md", "mode": "marker" }]
     },
     {
       "id": "cx",
@@ -61,8 +61,8 @@
         { "kind": "link", "from": "<HERMES_HOME>/memories", "to": "<memory>" },
         { "kind": "per-skill", "from": "<HERMES_HOME>/skills/global-skills", "to": "<skills>" }
       ],
-      "inject": [{ "path": "<HERMES_HOME>/AGENTS.md", "mode": "marker" }],
-      "notes": "per-skill tree = one symlink per skill entry (~160 items). Enable/disable is a batch op: concurrency cap 8, build in temp dir then rename into place, rollback on any failure. HERMES_HOME missing must warn explicitly, never silently fail."
+      "inject": [{ "path": "<HERMES_HOME>/SOUL.md", "mode": "marker" }],
+      "notes": "per-skill tree = one symlink per skill entry (~160 items). Enable/disable is a batch op: concurrency cap 8, build in temp dir then rename into place, rollback on any failure. HERMES_HOME missing must warn explicitly, never silently fail. Inject point = HERMES_HOME/SOUL.md (adjudicated 2026-10-02 against live disk evidence: SOUL.md sits at home root, memories/ is the memory mount link)."
     },
     {
       "id": "zc",

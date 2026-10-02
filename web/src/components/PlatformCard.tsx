@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { MountEntry, MutationResult, PlatformInfo } from "../lib/types";
+import { useT } from "../lib/i18n";
 import StatusBadge from "./StatusBadge";
 
-const KIND_NOTE: Record<MountEntry["kind"], string> = {
-  link: "符号链接",
-  mirror: "物理镜像，关闭=停止同步",
-  "per-skill": "逐技能链接树",
+const KIND_KEY: Record<MountEntry["kind"], "kindLink" | "kindMirror" | "kindPerSkill"> = {
+  link: "kindLink",
+  mirror: "kindMirror",
+  "per-skill": "kindPerSkill",
 };
 
 interface PlatformCardProps {
@@ -24,6 +25,7 @@ export default function PlatformCard({
   onToggle,
 }: PlatformCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const { t } = useT();
   const isOn = platform.status === "OK";
   const isBeta = platform.support === "beta";
 
@@ -46,13 +48,13 @@ export default function PlatformCard({
 
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs text-zinc-500">
-          {isOn ? "挂载运行中" : "未挂载"}
+          {isOn ? t("cardOn") : t("cardOff")}
         </span>
         <button
           type="button"
           role="switch"
           aria-checked={isOn}
-          aria-label={`${isOn ? "关闭" : "启用"} ${platform.label}`}
+          aria-label={`${isOn ? t("cardDisable") : t("cardEnable")} ${platform.label}`}
           disabled={busy}
           onClick={() => onToggle(platform, !isOn)}
           className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors duration-300 ${
@@ -83,7 +85,10 @@ export default function PlatformCard({
 
       {result && result.ok && (
         <p className="rounded-lg border border-teal-400/25 bg-teal-400/10 px-3 py-2 text-xs leading-relaxed text-teal-200">
-          操作成功 · 备份 ID：{result.backupId || "无"} · 变更 {result.changes.length} 项 · 可还原
+          {t("cardOk", {
+            id: result.backupId || t("cardOkNoBackup"),
+            n: result.changes.length,
+          })}
         </p>
       )}
 
@@ -100,13 +105,13 @@ export default function PlatformCard({
         >
           ▶
         </span>
-        挂载明细（{platform.mounts.length} 项）
+        {t("cardDetail", { n: platform.mounts.length })}
       </button>
 
       {detailOpen && (
         <div className="flex flex-col gap-2 rounded-lg border border-zinc-700/50 bg-black/25 p-3">
           {platform.mounts.length === 0 && (
-            <p className="text-xs text-zinc-500">无挂载记录</p>
+            <p className="text-xs text-zinc-500">{t("cardNone")}</p>
           )}
           {platform.mounts.map((m, i) => (
             <div key={`${m.from}-${m.to}-${i}`} className="flex flex-col gap-0.5">
@@ -116,12 +121,12 @@ export default function PlatformCard({
                 <span className="break-all text-zinc-400">{m.to}</span>
                 <StatusBadge status={m.status} />
               </div>
-              <span className="text-[10px] text-zinc-500">[{KIND_NOTE[m.kind]}]</span>
+              <span className="text-[10px] text-zinc-500">[{t(KIND_KEY[m.kind])}]</span>
             </div>
           ))}
           {platform.inject.length > 0 && (
             <div className="mt-1 flex flex-col gap-1.5 border-t border-zinc-700/50 pt-2">
-              <p className="text-[11px] font-medium text-zinc-400">注入项</p>
+              <p className="text-[11px] font-medium text-zinc-400">{t("cardInject")}</p>
               {platform.inject.map((inj) => (
                 <div
                   key={inj.path}

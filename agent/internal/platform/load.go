@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -121,8 +122,41 @@ func Load(path string) (*Config, error) {
 	if f.Site != nil {
 		cfg.Site = SiteInfo{Primary: f.Site.Primary, Mirror: f.Site.Mirror, Local: f.Site.Local}
 	}
-	cfg.resolve(nil)
+	cfg.resolve(loadRootsOverride())
 	return cfg, nil
+}
+
+// loadRootsOverride 读 ~/.fenjue/state/roots.json (POST /api/roots 的持久化产物)。
+// 任何失败 (缺失/损坏/展开不了) 都返回 nil, 静默回落 platforms.json 的默认 roots。
+func loadRootsOverride() map[string]string {
+	p := filepath.Join(safeio.FenjueHome(), "state", "roots.json")
+	data, err := os.ReadFile(p)
+	if err != nil {
+		return nil
+	}
+	var m map[string]string
+	if err := json.Unmarshal(data, &m); err != nil {
+		logx.Warn("platform: parse roots override %s: %v", p, err)
+		return nil
+	}
+	out := map[string]string{}
+	for _, key := range []string{"memory", "skills"} {
+		v := strings.TrimSpace(m[key])
+		if v == "" {
+			continue
+		}
+		exp, err := safeio.ExpandPath(v)
+		if err != nil {
+			logx.Warn("platform: expand roots override %s=%q: %v", key, v, err)
+			continue
+		}
+		out[key] = exp
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	logx.Info("platform: roots override applied from %s", p)
+	return out
 }
 
 // WithRoots 用 override 覆盖 roots 后重新展开全部路径 (enable body {roots?})。
