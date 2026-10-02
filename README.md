@@ -1,5 +1,11 @@
 # 焚诀 Global（global-memory-hub）
 
+[![CI](https://github.com/lxh113377/global-memory-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/lxh113377/global-memory-hub/actions/workflows/ci.yml)
+[![Release](https://github.com/lxh113377/global-memory-hub/actions/workflows/release.yml/badge.svg)](https://github.com/lxh113377/global-memory-hub/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-9-8A2BE2)](platforms.json)
+[![Go](https://img.shields.io/badge/go-1.x-00ADD8?logo=go&logoColor=white)](agent/go.mod)
+
 > English version: [README.en.md](README.en.md)
 
 让多个 AI Agent 共享**同一份本地记忆库与技能库**，改一处、N 端同步生效。
@@ -178,12 +184,38 @@ Windows 上刻意不采用需要开发者模式或提权的符号链接形式。
 
 ---
 
+## 和其他方案的区别
+
+同样在解决「多个 Agent 共用一份配置/技能」的问题，但选择不同：
+
+| 方案 | 覆盖端数 | 共享的是什么 | 形态 | 差别在哪 |
+|---|---|---|---|---|
+| **焚诀 Global（本项目）** | 9 | **记忆 + 技能** | 单文件程序 + 浏览器控制台 | 目前同类里**把记忆库也纳入共享范围**的方案；可逆软关闭 + 全量回滚 |
+| [vercel-labs/skills](https://github.com/vercel-labs/skills) | 79 | 技能 | Node CLI | 生态量大得多；只管技能，不管记忆；面向分发而非本地共享 |
+| [xingkongliang/skills-manager](https://github.com/xingkongliang/skills-manager) | 50+ | 技能 | 桌面应用 | 有市场、预设、多设备同步；不做记忆 |
+| [dyoshikawa/rulesync](https://github.com/dyoshikawa/rulesync) | — | 规则文件 | CLI | 面向各家的规则配置文件，不管理记忆/技能库内容 |
+| 各 Agent 自带配置 | 1 | 只有它自己 | 各家程序 | 天然分裂，改一处只改一处 |
+
+一句话概括差异：**别人主要在管「技能怎么装」，本项目管「记忆和技能怎么在你自己的机器上保持同一份」。**
+所以本项目刻意不做技能市场、不做多设备云同步 —— 那需要联网，与「不联网」的承诺冲突。
+
+更完整的八维对比（含逐项差距量化与改进清单）见 [对标报告](docs/BENCHMARK-2026-10-02.md)。
+
+---
+
 ## 相关文档
 
 - [安装说明 · Windows](docs/INSTALL-windows.md)
 - [安装说明 · macOS](docs/INSTALL-macos.md)
 - [安装说明 · Linux](docs/INSTALL-linux.md)
+- [架构说明](docs/ARCHITECTURE.md) —— 全局视图、三种挂载形态、令牌在请求链路上的位置
+- [常见问题](docs/FAQ.md)
+- [安全策略](docs/SECURITY.md) —— 四道安全闸、已知限制、漏洞报告方式
+- [贡献指南](docs/CONTRIBUTING.md) —— 构建顺序、判据清单、种子包规约
+- [变更日志](docs/CHANGELOG.md)
+- [技能分档说明](docs/SKILLS-TIERS.md) —— 哪些技能可以公开分发，为什么
 - [路线图：未完成任务与后续规划](docs/ROADMAP.md)
+- [对标报告 · 2026-10-02](docs/BENCHMARK-2026-10-02.md) —— 同类项目八维对比
 
 ---
 

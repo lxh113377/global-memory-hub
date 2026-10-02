@@ -1,5 +1,13 @@
 # Fenjue Global (global-memory-hub)
 
+[![CI](https://github.com/lxh113377/global-memory-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/lxh113377/global-memory-hub/actions/workflows/ci.yml)
+[![Release](https://github.com/lxh113377/global-memory-hub/actions/workflows/release.yml/badge.svg)](https://github.com/lxh113377/global-memory-hub/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-9-8A2BE2)](platforms.json)
+[![Go](https://img.shields.io/badge/go-1.x-00ADD8?logo=go&logoColor=white)](agent/go.mod)
+
+> 中文版: [README.md](README.md)
+
 > Chinese version: [README.md](README.md)
 
 Give multiple AI coding agents **one shared local memory store and one shared skill store**. Change it once, and every connected agent sees the same thing.
@@ -178,12 +186,38 @@ On Windows the project deliberately avoids the symbolic-link form, which would r
 
 ---
 
+## How this differs from other approaches
+
+Same problem space (several agents sharing one config or skill set), different choices:
+
+| Approach | Endpoints | What is shared | Shape | Where it differs |
+|---|---|---|---|---|
+| **Fenjue Global (this project)** | 9 | **memory + skills** | Single binary + browser console | The only approach here that puts the **memory store** in scope as well; reversible soft-close with full restore |
+| [vercel-labs/skills](https://github.com/vercel-labs/skills) | 79 | skills | Node CLI | Far larger ecosystem; skills only, no memory; aimed at distribution rather than local sharing |
+| [xingkongliang/skills-manager](https://github.com/xingkongliang/skills-manager) | 50+ | skills | Desktop app | Has a marketplace, presets and multi-device sync; no memory layer |
+| [dyoshikawa/rulesync](https://github.com/dyoshikawa/rulesync) | — | rule files | CLI | Manages each vendor's rule files, not a memory/skill store |
+| Each agent's own config | 1 | only its own | vendor apps | Splits by design: changing one changes one |
+
+In one line: **others mostly solve how skills get installed; this project solves keeping memory and skills as one copy on your own machine.**
+That is also why there is deliberately no skill marketplace and no cloud multi-device sync here: both need network access, which would break the no-network promise.
+
+Full eight-dimension comparison, with quantified gaps and the improvement backlog, is in the [benchmark report](docs/BENCHMARK-2026-10-02.md).
+
+---
+
 ## Further reading
 
 - [Install guide - Windows](docs/INSTALL-windows.md)
 - [Install guide - macOS](docs/INSTALL-macos.md)
 - [Install guide - Linux](docs/INSTALL-linux.md)
+- [Architecture](docs/ARCHITECTURE.md) - global view, mount forms, where the token sits in the request path
+- [FAQ](docs/FAQ.md)
+- [Security policy](docs/SECURITY.md) - the four gates, known limitations, how to report a vulnerability
+- [Contributing](docs/CONTRIBUTING.md) - build order, gate list, seed pack rules
+- [Changelog](docs/CHANGELOG.md)
+- [Skill tiers](docs/SKILLS-TIERS.md) - what may be distributed publicly, and why
 - [Roadmap: open work and next steps](docs/ROADMAP.md)
+- [Benchmark report - 2026-10-02](docs/BENCHMARK-2026-10-02.md) - eight-dimension comparison
 
 > **Language note.** The three platform install guides are currently written in Chinese only. Full English localisation of the documentation is tracked as G9 in the [roadmap](docs/ROADMAP.md#2-优先级排序); this README pair is the first step of it.
 
