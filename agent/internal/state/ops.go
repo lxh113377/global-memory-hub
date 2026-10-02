@@ -242,6 +242,39 @@ func Disable(cfg *platform.Config, id string, soft bool) (*OpResult, error) {
 	return &OpResult{OK: true, BackupID: backupID, Changes: changes}, nil
 }
 
+// SyncMirror 手动触发 mirror 挂载的单向同步 (G11: 镜像端手动同步)。
+// 仅对 kind=mirror 的挂载生效; 同步后清 soft-off 标记并写 synced 标记。
+func SyncMirror(cfg *platform.Config, id string) (*OpResult, error) {
+	opMu.Lock()
+	defer opMu.Unlock()
+	p := cfg.FindPlatform(id)
+	if p == nil {
+		return nil, &NotFoundError{Platform: id}
+	}
+	changes := []string{}
+	synced := 0
+	for _, m := range p.Mounts {
+		if !m.Resolved || m.Kind != "mirror" {
+			continue
+		}
+		n, err := mount.MirrorSync(m.From, m.To)
+		if err != nil {
+			return nil, fmt.Errorf("platform %s mirror %q -> %q: %w", id, m.From, m.To, err)
+		}
+		if err := writeMirrorSynced(id, m.From, m.To); err != nil {
+			return nil, err
+		}
+		clearMirrorOff(id)
+		changes = append(changes, fmt.Sprintf("mirror synced %d files: %s -> %s", n, m.From, m.To))
+		synced += n
+	}
+	if len(changes) == 0 {
+		return nil, fmt.Errorf("platform %s has no mirror mounts", id)
+	}
+	logx.Info("manual mirror sync platform %s: files=%d", id, synced)
+	return &OpResult{OK: true, BackupID: "", Changes: changes}, nil
+}
+
 // Restore 从备份还原 (注入语义: 删段+回滚备份, 由整文件回滚天然覆盖)。
 func Restore(backupID string) (*OpResult, error) {
 	opMu.Lock()

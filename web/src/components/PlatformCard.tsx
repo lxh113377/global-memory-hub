@@ -15,6 +15,7 @@ interface PlatformCardProps {
   result: MutationResult | null;
   error: string | null;
   onToggle: (platform: PlatformInfo, next: boolean) => void;
+  onSync?: (platform: PlatformInfo) => void;
 }
 
 export default function PlatformCard({
@@ -23,11 +24,13 @@ export default function PlatformCard({
   result,
   error,
   onToggle,
+  onSync,
 }: PlatformCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const { t } = useT();
   const isOn = platform.status === "OK";
   const isBeta = platform.support === "beta";
+  const hasMirror = platform.mounts.some((m) => m.kind === "mirror");
 
   return (
     <section className="glass-panel flex flex-col gap-3 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-amber-400/40 hover:shadow-[0_10px_32px_rgba(255,107,26,0.18)]">
@@ -92,21 +95,33 @@ export default function PlatformCard({
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={() => setDetailOpen((v) => !v)}
-        className="flex items-center gap-1.5 self-start text-xs text-zinc-400 transition-colors hover:text-amber-300"
-        aria-expanded={detailOpen}
-      >
-        <span
-          className={`inline-block text-[10px] transition-transform duration-200 ${
-            detailOpen ? "rotate-90" : ""
-          }`}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setDetailOpen((v) => !v)}
+          className="flex items-center gap-1.5 self-start text-xs text-zinc-400 transition-colors hover:text-amber-300"
+          aria-expanded={detailOpen}
         >
-          ▶
-        </span>
-        {t("cardDetail", { n: platform.mounts.length })}
-      </button>
+          <span
+            className={`inline-block text-[10px] transition-transform duration-200 ${
+              detailOpen ? "rotate-90" : ""
+            }`}
+          >
+            ▶
+          </span>
+          {t("cardDetail", { n: platform.mounts.length })}
+        </button>
+        {hasMirror && onSync && isOn && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onSync(platform)}
+            className="self-start rounded-lg border border-zinc-700/60 px-2.5 py-1 text-xs text-zinc-300 transition-colors hover:border-amber-400/50 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? "…" : t("cardSync")}
+          </button>
+        )}
+      </div>
 
       {detailOpen && (
         <div className="flex flex-col gap-2 rounded-lg border border-zinc-700/50 bg-black/25 p-3">

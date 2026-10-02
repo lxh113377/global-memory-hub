@@ -140,9 +140,9 @@ func (s *Server) handlePlatformOp(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "expected /api/platforms/{id}/{enable|disable|restore}")
 		return
 	}
-	id, action := parts[0], parts[1]
-	switch action {
-	case "enable":
+		id, action := parts[0], parts[1]
+		switch action {
+		case "enable":
 		var body enableBody
 		if err := decodeBody(r, &body); err != nil {
 			writeErr(w, http.StatusBadRequest, err.Error())
@@ -190,8 +190,15 @@ func (s *Server) handlePlatformOp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, res)
+	case "sync":
+		res, err := state.SyncMirror(s.cfg, id)
+		if err != nil {
+			respondOpErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
 	default:
-		writeErr(w, http.StatusNotFound, "unknown action "+action+"; use enable|disable|restore")
+		writeErr(w, http.StatusNotFound, "unknown action "+action+"; use enable|disable|restore|sync")
 	}
 }
 

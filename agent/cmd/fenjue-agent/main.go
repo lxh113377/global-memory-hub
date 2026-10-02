@@ -56,8 +56,10 @@ func main() {
 		cmdToggle(args, true)
 	case "disable":
 		cmdToggle(args, false)
+	case "uninstall":
+		cmdUninstall(args)
 	case "version":
-		fmt.Println(version)
+		cmdVersion(args)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand %q\n\n", sub)
 		usage()
@@ -73,6 +75,8 @@ usage:
   fenjue-agent verify   [--platforms <path>]
   fenjue-agent enable <id>   [--platforms <path>]
   fenjue-agent disable <id>  [--soft=true] [--platforms <path>]
+  fenjue-agent uninstall [--yes] [--hard=true] [--platforms <path>]
+  fenjue-agent version [--check]
 
 serve hosts the local console on 127.0.0.1 only and prints a handshake link.
 `)
