@@ -1,0 +1,11 @@
+# embedded seed pack must be stored byte-for-byte
+#
+# manifest.json records a SHA-256 per seeded file, and a hash is computed over
+# bytes. If line-ending conversion is allowed, the same content checks out as
+# CRLF on Windows and LF on Linux CI, the two hashes differ, and the pre-seed
+# integrity check fails on CI for reasons unrelated to the code. -text disables
+# conversion entirely: whatever bytes are stored are the bytes every platform gets.
+agent/internal/seed/pack/** -text
+
+# Keep text files LF in the repository to avoid cross-platform diff noise.
+* text=auto eol=lf
