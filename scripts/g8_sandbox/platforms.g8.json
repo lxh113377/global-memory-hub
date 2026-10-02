@@ -1,0 +1,48 @@
+{
+  "schema": "fenjue-platforms-v1",
+  "version": "1.0.0",
+  "_note": "G8 container instance. Roots and homes live INSIDE the container on purpose: the author machine cannot host this test because the product path would repoint at the real library root. No host path is mounted.",
+  "roots": {
+    "memory": "/g8/roots/memory",
+    "skills": "/g8/roots/skills"
+  },
+  "site": {
+    "primary": "https://example.invalid",
+    "mirror": "",
+    "local": "http://127.0.0.1:7799"
+  },
+  "platforms": [
+    {
+      "id": "mm",
+      "label": "MiniMax Code",
+      "support": "beta",
+      "os": ["linux"],
+      "home": "/g8/home/.minimax",
+      "mounts": [
+        { "kind": "link", "from": "/g8/home/.minimax/skills", "to": "<skills>" },
+        { "kind": "link", "from": "/g8/home/.minimax/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "/g8/home/.minimax/AGENTS.md", "mode": "marker" },
+        { "path": "/g8/home/.minimax/SOUL.md", "mode": "marker" }
+      ],
+      "notes": "G8 sandbox. Consumption behaviour cannot be proven here: mm ships as a desktop app with no headless CLI, so the target program is absent in the container by design."
+    },
+    {
+      "id": "ds",
+      "label": "DeepSeek Harness Desktop",
+      "support": "beta",
+      "os": ["linux"],
+      "home": "/g8/home/.dsh",
+      "mounts": [
+        { "kind": "link", "from": "/g8/home/.dsh/skills", "to": "<skills>" },
+        { "kind": "link", "from": "/g8/home/.dsh/memory", "to": "<memory>" }
+      ],
+      "inject": [
+        { "path": "/g8/home/.dsh/AGENTS.md", "mode": "marker" },
+        { "path": "/g8/home/.dsh/SOUL.md", "mode": "marker" }
+      ],
+      "notes": "G8 sandbox. Same limit as mm: desktop app, no headless CLI, consumption stays UNVERIFIED."
+    }
+  ]
+}
