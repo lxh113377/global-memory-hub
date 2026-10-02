@@ -20,8 +20,32 @@
 - G8 沙箱取证协议：[G8-DOCKER-PROTOCOL.md](G8-DOCKER-PROTOCOL.md) 与 `scripts/g8_sandbox/`。
   在隔离容器内对 `mm` / `ds` 跑 enable/verify/link/zero-overwrite 与一条反例腿，
   输出 NDJSON、退出码三态。实测 rc=0，程序侧装载行为由此证实；消费行为仍 UNVERIFIED。
+- **规模压测**：[scripts/bench_scale.py](scripts/bench_scale.py) 与 [PERFORMANCE.md](PERFORMANCE.md)。
+  三档规模（9/50/200 端、50/300/1000 技能、500/3000/10000 库文件），五项指标取中位数：
+  冷启动恒定约 0.5 s（库文件翻 20 倍也不变）、单端启用恒定（端数翻 22 倍也不变）、
+  技能挂载吞吐 40–65 links/s（**单端 1000 技能约需 22 s**，是同维度唯一实质短板）、
+  全量校验随（端数 + 技能数）线性而**与库文件数无关**、常驻内存 11.2–13.8 MB（下界，内嵌前端为占位产物）。
+  压测在仓内沙箱进行，子进程带重定向的 `USERPROFILE`/`HOME`，**不触碰真实 `~/.fenjue`**；
+  端口向系统动态申请，避免残留进程造成假失败。同档重跑抖动可达 3 倍，一次被磁盘负载污染的样本已丢弃并写进文档。
+- **HTTP API 文档**：[API.md](API.md)。7 个端点的鉴权、请求体、响应体、状态码与四道安全闸对调用方的影响，
+  含三处与直觉相反的事实（鉴权头是 `X-Fenjue-Token` 而非 `Authorization`；Origin 白名单只对带 Origin 头的请求生效；
+  `POST /api/roots` 的 `applied` 恒为 false，因为需重启才生效）。
+- **API 契约判据**：[scripts/check_api_contract.py](scripts/check_api_contract.py)。
+  文档与 `router.go` 路由注册表**双向对账**（少写或多写都判红），`--live` 模式在沙箱起真实 serve 实测状态码
+  （22 项检查）。阻断型腿进 `consistency` job，实测腿以 advisory 腿单独接入。
+- **命名预设（批量启停）**：`platforms.json` 新增可选 `presets` 段（1.1.0），
+  `fenjue-agent preset <name> [--action enable|disable] [--dry-run]` 与 `POST /api/presets/{name}`，
+  控制台新增预设卡片。成员由配置决定，程序不内置任何分组；编排层复用既有 `Enable`/`Disable`，
+  因此备份、回滚、幂等与注入语义与单端完全一致。批量停用一律软关闭。
+  判据：[scripts/check_preset_config.py](scripts/check_preset_config.py)（Python 独立第二实现）。
+- **只读出口**：`fenjue-agent export [--include-content] [--format json|markdown]`。
+  给脚本与另一个 AI 端读取统一库现状：**只读、不联网、不监听端口、不需令牌、默认不含正文**。
+- 发行产物附带 `SHA256SUMS`（合并全部构建产物后生成，并在发版前核对条目数）。
+- 对外主站新增**文档中心**（12 个文档入口，逐条实测可达），此前只链到仓库首页与安装文档。
 
 ### 变更
+
+- `platforms.json` 版本 1.0.0 → 1.1.0：新增可选 `presets` 段。向后兼容，没有该段的旧配置照常加载（零预设）。
 
 - 种子构建脚本的消毒规则由**针对特定个人的字面量**改为**通用启发式**（正则形态）。
   原写法把个人标识写进了随仓库公开的脚本里，字面量本身即泄漏面；
