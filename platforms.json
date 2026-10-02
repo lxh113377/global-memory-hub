@@ -7,7 +7,7 @@
     "skills": "~/.fenjue/skills"
   },
   "site": {
-    "primary": "https://global-memory-hub.example.com",
+    "primary": "https://lxh113377.github.io/global-memory-hub",
     "mirror": "https://global-memory-hub.pages.dev",
     "local": "http://127.0.0.1:7799"
   },

@@ -41,10 +41,17 @@ type rawPlatform struct {
 	Notes       string      `json:"notes"`
 }
 
+type rawSite struct {
+	Primary string `json:"primary"`
+	Mirror  string `json:"mirror"`
+	Local   string `json:"local"`
+}
+
 type rawFile struct {
 	Schema    string            `json:"schema"`
 	Version   string            `json:"version"`
 	Roots     map[string]string `json:"roots"`
+	Site      *rawSite          `json:"site"`
 	Platforms []rawPlatform     `json:"platforms"`
 }
 
@@ -83,8 +90,16 @@ type Config struct {
 	Version    string
 	SourcePath string
 	Roots      map[string]string
+	Site       SiteInfo
 	Platforms  []*Platform
 	raw        *rawFile
+}
+
+// SiteInfo 站点地址段 (site.primary/mirror/local), 供握手链接与 Origin 白名单消费。
+type SiteInfo struct {
+	Primary string
+	Mirror  string
+	Local   string
 }
 
 var placeholderRe = regexp.MustCompile(`<([A-Za-z][A-Za-z0-9_]*)>`)
@@ -103,13 +118,16 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("platform: %s: unsupported schema %q (expect %q)", path, f.Schema, ExpectedSchema)
 	}
 	cfg := &Config{Schema: f.Schema, Version: f.Version, SourcePath: path, raw: &f}
+	if f.Site != nil {
+		cfg.Site = SiteInfo{Primary: f.Site.Primary, Mirror: f.Site.Mirror, Local: f.Site.Local}
+	}
 	cfg.resolve(nil)
 	return cfg, nil
 }
 
 // WithRoots 用 override 覆盖 roots 后重新展开全部路径 (enable body {roots?})。
 func (c *Config) WithRoots(override map[string]string) *Config {
-	c2 := &Config{Schema: c.Schema, Version: c.Version, SourcePath: c.SourcePath, raw: c.raw}
+	c2 := &Config{Schema: c.Schema, Version: c.Version, SourcePath: c.SourcePath, raw: c.raw, Site: c.Site}
 	c2.resolve(override)
 	return c2
 }

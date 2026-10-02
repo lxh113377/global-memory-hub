@@ -165,6 +165,10 @@ func cmdServe(args []string) {
 	fmt.Printf("platforms: %s\n", cfg.SourcePath)
 	fmt.Printf("token file: %s\n", safeio.TokenPath())
 	fmt.Printf("Handshake: http://127.0.0.1:%d/console#token=%s\n", *cf.port, token)
+	// 云端控制台入口: 浏览器直连访客本机 127.0.0.1, token 仍走 URL fragment 不落服务器。
+	if p := strings.TrimSpace(cfg.Site.Primary); p != "" && !strings.Contains(p, "example.com") {
+		fmt.Printf("Web console: %s/console/#token=%s\n", strings.TrimSuffix(p, "/"), token)
+	}
 	fmt.Printf("listening on %s\n", addr)
 	logx.Info("serve start on %s (platforms=%s)", addr, cfg.SourcePath)
 	if err := http.ListenAndServe(addr, srv.Handler()); err != nil {
