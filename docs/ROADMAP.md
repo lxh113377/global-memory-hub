@@ -23,6 +23,7 @@
 > 发布前对**全历史**（49 个 blob，非仅 HEAD）做过敏感面扫描：密钥、私钥、私有项目名、可疑文件名全 0；
 > 仅一处良性命中（某历史版本的示例输出里 `C:\Users\<你>` 是占位符，不含标识信息），当前 HEAD 已改为 `%USERPROFILE%` 形式。
 > **进度更新（2026-10-02）**：G15（空库引导）完成；G7 开源档落地（种子包 18 技能 + 消毒门禁）；G10 三工作流入库待首 tag；G2 工作流入库待仓库 Pages 开关；G14 按默认双域名口径收口。
+> **进度更新（2026-10-02 晚，对标轮）**：G16–G20 完成（仓内个人标识清零、版本一致性判据、种子包 SHA-256 完整性凭据、治理五件套 + README 门面、八维对标报告）；G21 经实测**撤销**（平台矩阵已是 9 端，属重复建设）；G22–G26 登记为 TODO。详见 [对标报告](BENCHMARK-2026-10-02.md)。
 
 ### 盘面 A — 本仓库（焚诀 Global）
 
@@ -44,6 +45,17 @@
 | G13 | 平台定义与私有权威源的注入点差异裁决 | 人（裁决）+ 锋 | **DONE** | 逐端实测 | **2026-10-02 裁决（以磁盘实测为准）**：tr 注入点 `~/.trae-cn/SOUL.md`（私有权威 V11 一致 + 实测该目录无 AGENTS.md）；hm 注入点 `<HERMES_HOME>/SOUL.md`（实测在役文件在 home 根，memories/ 是链接非注入点）；platforms.json 已回写 |
 | G14 | `platforms.json` 的站点域名从占位符换成真实域名 | 人 | **DONE**（默认双域名口径） | G1 | `site.primary` = `lxh113377.github.io/global-memory-hub`、`site.mirror` = `global-memory-hub.pages.dev`，占位域名已清除；自定义域名降为可选项，换域名时同步改 `site.*` 即可 |
 | G15 | 空库引导与首启播种（2026-10-02 盘面实测新增：全新机器 enable 后库根不存在→BROKEN） | 锋 | **DONE** | — | `seed.Bootstrap` 接入 `state.Enable` 与 serve 启动：建根 + 空库播种（记忆骨架 + 18 技能），已有库零覆盖，链接不写穿；单测 4/4 + 假端端到端冒烟实测（enable→verify 2 OK→disable→再 enable 命中零覆盖） |
+| G16 | 清除仓内个人标识明文（种子构建脚本的消毒规则由字面量改通用启发式） | 锋 | **DONE** | — | 原写法把个人姓名/学号/用户名作为**消毒规则字面量**写进随仓库公开的脚本，字面量本身即泄漏面（消毒有效但规则泄漏）。改为正则形态启发式后对任何用户名与私有根名都生效，精度靠本地不入库文件 `scripts/sanitize.local.json` 补齐。完成判据：仓内 `grep` 个人标识 = 0 命中（实测 rc=1 即零命中） |
+| G17 | 版本一致性机器判据 | 锋 | **DONE** | G1 | 曾发生真实漂移（提交自述「drifted since v0.2.1, caught by docker round」）。`scripts/check_version_sync.py` 按语义分三层：产品版本（tag ↔ 代码常量）、种子版本（清单 ↔ 代码常量）、平台配置版本（schema 后缀 ↔ 配置版本号）。**刻意不把平台配置版本与产品版本硬绑** —— 语义不同，硬绑会造一条永远红的判据。9 条漂移反例自测 + 篡改实测（改常量 rc=1 / 恢复 rc=0）；无 tag 浅克隆报 UNVERIFIED 不折算通过 |
+| G18 | 种子包完整性凭据（manifest + SHA-256） | 锋 | **DONE** | G15 | 零覆盖只保证不破坏用户数据，**不能证明写入内容本身未被篡改**。新增 `pack/manifest.json`；`seed.VerifyPack` 在**任何写入之前** fail-closed 全量校验并双向对账（登记但缺失 / 存在但未登记都判差异）。单测 1 正例 + 5 篡改反例 + 1 端到端不写入反例；`scripts/verify_seed_manifest.py` 为**独立第二实现**做交叉验（防自比恒等）。篡改实测：+1 字节 rc=1、恢复 rc=0 |
+| G19 | 治理文档 + README 门面 | 锋 | **DONE** | — | 新增 CONTRIBUTING / SECURITY / CHANGELOG / ARCHITECTURE / FAQ 五件套并双向链进 README；README 加徽章（指向真实 workflow，CI 与 Release）与同类项目定位对比表，中英双版同步 |
+| G20 | 同类开源项目八维对标报告 | 锋 | **DONE** | — | `docs/BENCHMARK-2026-10-02.md`：八维对比 + 差距量化 + 分级建议清单 + 分阶段路径 + 三态取证台账。取证纪律：三项 `[UNVERIFIED]`（取不到实体）不折算 0；发现并**否证**了一条自己的初判（构建产物入库 ⇒ 实为仅本地存在），该条留档为「推断必须复验」实例 |
+| G21 | 平台矩阵扩展（`zc` / `oc` / `qd` 等） | 锋 | **已存在，不重复建设** | — | 本轮盘点实测 `platforms.json` **已是 9 端**（含 zc/oc/qd，mm/ds 为 beta 且已带 notes 说明），相关路径定义与 parity 覆盖均已存在。原设想项据此降级撤销。mm/ds 转 ga 的端到端验证已由 G8 承载，不另开条目 |
+| G22 | 命名预设（Presets）批量启停 | 锋 | TODO | G6 | 生态位能力（对标 xingkongliang/skills-manager），需真实使用反馈再定形态。**刻意不做**：预设的粒度与合并语义在无反馈前定死会造成返工 |
+| G23 | 项目级工作区（project scope + 双向对比同步） | 锋 | TODO | G22 | 同上。对标 vercel-labs/skills 的 project scope 能力 |
+| G24 | Agent 自主管理出口（MCP / CLI） | 锋 | TODO | G5 | 对标 skills-manager 的「让 Agent 驱动管理器」。**先定安全边界再实现**：令牌如何交给 Agent、Agent 能写哪些路径，这两件事不定就做等于开后门 |
+| G25 | 发行产物附校验和 / 签名 | 锋 | TODO | G10 | release.yml 已产出 5 个目标但无 checksum 文件。二进制签名仍 BLOCKED 于付费证书（G11） |
+| G26 | 规模压测（挂载耗时 / 大库扫描上限） | 锋 | TODO | — | 当前**无任何规模上限实测数据**，属文档空白。README 已明示不冒称性能优势，此项补数据用 |
 
 #### §1.1 技能分级的依据（G7 为何必须分级）
 
