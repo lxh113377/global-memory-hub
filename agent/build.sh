@@ -30,5 +30,6 @@ mkdir -p cmd/fenjue-agent/dist
 cp -r ../web/dist/. cmd/fenjue-agent/dist/
 
 echo "[build] using go: $("$GO_BIN" version)"
-"$GO_BIN" build -trimpath -ldflags "-s -w" -o fenjue-agent ./cmd/fenjue-agent
+# CGO_ENABLED=0: 静态链接, linux 产物在 alpine/musl 也能跑 (docker 实测 2026-10-02)
+CGO_ENABLED=0 "$GO_BIN" build -trimpath -ldflags "-s -w" -o fenjue-agent ./cmd/fenjue-agent
 echo "[build] done: agent/fenjue-agent"
