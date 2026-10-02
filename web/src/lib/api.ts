@@ -1,4 +1,11 @@
-import type { AppState, HealthInfo, MutationResult } from "./types";
+import type {
+  AppState,
+  HealthInfo,
+  MutationResult,
+  RootsSetResult,
+  SkillsResponse,
+  VerifyReport,
+} from "./types";
 
 const API_BASE = "http://127.0.0.1:7799";
 const TOKEN_KEY = "fenjue_token";
@@ -122,4 +129,28 @@ export function disablePlatform(id: string): Promise<MutationResult> {
     "POST",
     { soft: true }
   );
+}
+
+/** List skills in the unified skills root (live disk read). */
+export function fetchSkills(): Promise<SkillsResponse> {
+  return request<SkillsResponse>("/api/skills");
+}
+
+/** Run the four-state verify report. */
+export function runVerify(): Promise<VerifyReport> {
+  return request<VerifyReport>("/api/verify", "POST");
+}
+
+/** Persist custom library roots (takes effect after agent restart). */
+export function setRoots(
+  memory: string,
+  skills: string
+): Promise<RootsSetResult> {
+  return request<RootsSetResult>("/api/roots", "POST", { memory, skills });
+}
+
+/** Best-effort error text from an unknown catch value. */
+export function errText(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return String(e);
 }

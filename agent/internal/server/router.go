@@ -18,7 +18,7 @@ import (
 )
 
 // Version 对外汇报的代理版本。
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 // Server 本地伴随程序。
 type Server struct {
@@ -66,6 +66,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/health", s.handleHealth)
 	mux.HandleFunc("/api/state", s.handleState)
 	mux.HandleFunc("/api/verify", s.handleVerify)
+	mux.HandleFunc("/api/skills", s.handleSkills)
+	mux.HandleFunc("/api/roots", s.handleRootsSet)
 	mux.HandleFunc("/api/platforms/", s.handlePlatformOp)
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "unknown api path "+r.URL.Path)
