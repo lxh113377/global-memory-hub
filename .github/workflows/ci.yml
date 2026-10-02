@@ -99,6 +99,26 @@ jobs:
         run: python3 scripts/check_version_sync.py
       - name: seed manifest cross-check (second implementation, guards against self-consistent-but-wrong)
         run: python3 scripts/verify_seed_manifest.py
+      - name: api contract selftest (a phantom endpoint and an undocumented route must both bite)
+        run: python3 scripts/check_api_contract.py --selftest
+      - name: api contract (docs/API.md <-> router.go, both directions)
+        run: python3 scripts/check_api_contract.py
+
+  # API 实测腿 (advisory)。需要 go build 并在回环起一个沙箱 serve, 放共享 runner 上做
+  # 文档承诺的状态码核对; 失败多半是环境问题, 不该把构建判红, 故与 bench 同样 advisory。
+  api-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: agent/go.mod
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: probe documented status codes against a sandboxed serve (advisory)
+        continue-on-error: true
+        run: python3 scripts/check_api_contract.py --live
 
   # 性能实测腿 (advisory)。与 parity 同一约定: 共享 runner 的性能数字抖动大,
   # 接进阻断链只会制造与代码无关的红。数字的权威来源是 docs/PERFORMANCE.md 的本机实测,

@@ -215,6 +215,8 @@ Windows 上刻意不采用需要开发者模式或提权的符号链接形式。
 - [变更日志](docs/CHANGELOG.md)
 - [技能分档说明](docs/SKILLS-TIERS.md) —— 哪些技能可以公开分发，为什么
 - [路线图：未完成任务与后续规划](docs/ROADMAP.md)
+- [HTTP API](docs/API.md) —— 全部端点的鉴权、请求/响应、状态码与四道安全闸对调用方的影响
+- [性能实测](docs/PERFORMANCE.md) —— 三档规模实测数据、复杂度归因与边界声明
 - [对标报告 · 2026-10-02](docs/BENCHMARK-2026-10-02.md) —— 同类项目八维对比
 
 ---
