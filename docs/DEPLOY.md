@@ -21,6 +21,23 @@
 
 push 形如 `v0.1.0` 的 tag 即触发 `.github/workflows/release.yml`：五目标交叉编译（windows/amd64、linux/amd64+arm64、darwin/amd64+arm64）自动传 GitHub Release。INSTALL 文档与官网下载按钮都指向 `releases/latest`。
 
+### 校验下载到的产物
+
+每个 release 附带一个 `SHA256SUMS`，列出该次发布的全部 5 个产物。下载后先校验再运行：
+
+```bash
+# Linux / macOS
+sha256sum -c SHA256SUMS
+
+# Windows PowerShell（无 sha256sum 时）
+Get-FileHash .\fenjue-agent-windows-amd64.exe -Algorithm SHA256
+# 再与 SHA256SUMS 里对应那一行比对
+```
+
+`SHA256SUMS` 在合并所有构建产物**之后**生成（`merge-multiple` 把五个 job 的产物放进同一个 `dist/`），并在创建 release 前核对条目数与文件数一致 —— 少一个文件就红，而不是发一个缺项的校验文件出去。
+
+> 二进制**签名**仍不在此列：需要付费代码签名证书，属未完成项（见 ROADMAP）。校验和能证明下载没被改动，不能证明它来自我们。
+
 ## 本地自测部署效果
 
 ```bash

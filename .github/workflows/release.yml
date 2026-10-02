@@ -54,6 +54,24 @@ jobs:
         with:
           merge-multiple: true
           path: dist
+      - name: checksum every artifact
+        # 一次覆盖全部 5 个目标: merge-multiple 已把各 build job 的产物合并到 dist/,
+        # 所以校验和必须在合并之后生成, 否则每个 job 只能看见自己那一个文件。
+        # 生成在 dist/ 内, 因此 dist/* 通配会自动把它带上, 无需改动 create 命令。
+        run: |
+          cd dist
+          sha256sum fenjue-agent-* > SHA256SUMS
+          cat SHA256SUMS
+      - name: verify the checksum file lists every artifact
+        run: |
+          cd dist
+          listed=$(wc -l < SHA256SUMS)
+          actual=$(ls -1 fenjue-agent-* | wc -l)
+          if [ "$listed" -ne "$actual" ]; then
+            echo "SHA256SUMS lists $listed entries but there are $actual artifacts" >&2
+            ls -1 fenjue-agent-* >&2
+            exit 1
+          fi
       - name: create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
