@@ -8,6 +8,7 @@ import {
   fetchState,
   hasToken,
   initTokenFromHash,
+  setToken,
 } from "./lib/api";
 import type {
   AppState,
@@ -60,6 +61,7 @@ export default function App() {
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   const [batchBusy, setBatchBusy] = useState<BatchMode | null>(null);
   const [batchMsg, setBatchMsg] = useState<string | null>(null);
+  const [tokenInput, setTokenInput] = useState("");
 
   const probeHealth = useCallback(async () => {
     try {
@@ -227,6 +229,38 @@ export default function App() {
             <p className="text-xs leading-relaxed text-zinc-500">
               若浏览器拦截本地连接，请直接运行本地程序使用内置控制台。
             </p>
+          </div>
+        </div>
+      )}
+
+      {conn === "online" && health?.token_required && !tokenPresent && (
+        <div className="border-b border-amber-500/15 bg-amber-500/[0.06] px-4 py-4 sm:px-6">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-2">
+            <p className="text-sm font-semibold text-amber-300">需要握手令牌</p>
+            <p className="text-xs leading-relaxed text-zinc-400">
+              本地程序已运行但尚未携带令牌。粘贴 fenjue-agent serve 启动时打印的 token（64 位十六进制），
+              或直接重新打开完整握手链接进入。
+            </p>
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!tokenInput.trim()) return;
+                setToken(tokenInput);
+                setTokenPresent(true);
+                void refreshState();
+              }}
+            >
+              <input
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                placeholder="粘贴 token（64 位十六进制）"
+                className="w-full max-w-md rounded-lg border border-zinc-700/60 bg-black/40 px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none focus:border-amber-400/60"
+              />
+              <button type="submit" className="btn-primary text-xs">
+                进入控制台
+              </button>
+            </form>
           </div>
         </div>
       )}

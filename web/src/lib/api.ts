@@ -3,7 +3,7 @@ import type { AppState, HealthInfo, MutationResult } from "./types";
 const API_BASE = "http://127.0.0.1:7799";
 const TOKEN_KEY = "fenjue_token";
 
-export type ApiErrorKind = "offline" | "forbidden" | "network";
+export type ApiErrorKind = "offline" | "forbidden" | "unauthorized" | "network";
 
 /** Normalized API failure: offline (program not running), 403 (token), other network/HTTP errors. */
 export class ApiError extends Error {
@@ -51,6 +51,15 @@ function getToken(): string {
   }
 }
 
+/** Persist a manually pasted token into sessionStorage. */
+export function setToken(token: string): void {
+  try {
+    window.sessionStorage.setItem(TOKEN_KEY, token.trim());
+  } catch {
+    // sessionStorage unavailable: token kept in memory only for this session scope
+  }
+}
+
 async function request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -68,6 +77,9 @@ async function request<T>(path: string, method = "GET", body?: unknown): Promise
     throw new ApiError("offline", "未检测到本地程序，请确认本地伴随程序已启动");
   }
 
+  if (res.status === 401) {
+    throw new ApiError("unauthorized", "未带令牌（401）：请粘贴本地程序启动时打印的令牌，或通过握手链接进入");
+  }
   if (res.status === 403) {
     throw new ApiError("forbidden", "令牌校验失败（403），请通过带令牌的入口链接重新进入");
   }

@@ -22,6 +22,7 @@
 > 仓库已建为 `lxh113377/global-memory-hub`，先私有、核验洁净后转公开。
 > 发布前对**全历史**（49 个 blob，非仅 HEAD）做过敏感面扫描：密钥、私钥、私有项目名、可疑文件名全 0；
 > 仅一处良性命中（某历史版本的示例输出里 `C:\Users\<你>` 是占位符，不含标识信息），当前 HEAD 已改为 `%USERPROFILE%` 形式。
+> **进度更新（2026-10-02）**：G15（空库引导）完成；G7 开源档落地（种子包 18 技能 + 消毒门禁）；G10 三工作流入库待首 tag；G2 工作流入库待仓库 Pages 开关；G14 按默认双域名口径收口。
 
 ### 盘面 A — 本仓库（焚诀 Global）
 
@@ -29,19 +30,20 @@
 |---|---|---|---|---|---|
 | G0 | 让干净克隆可构建；构建产物不再入库 | 锋 | **DONE** | — | 已修并双向验证，见 §3.1 |
 | G1 | 建远端仓库 + 首次推送 + 转公开 | 人（授权）+ 锋 | **DONE**（Release 待 G10） | — | 已建私有并首推，核验洁净后转公开；Release 资产依赖 G10 的交叉编译产物 |
-| G2 | 双线部署（GitHub Pages 主 + Cloudflare Pages 镜像）+ 两侧产物逐文件哈希比对 | 锋 | TODO | G1、G3 | 无远端即无 Pages；镜像需 Cloudflare 项目 |
-| G3 | `README.md` / `README.en.md` / 三平台 `INSTALL-*.md` | 锋 | **DONE** | — | 已产出并提交；三份安装说明当前仅中文，英文版随 G9 |
+| G2 | 双线部署（GitHub Pages 主 + Cloudflare Pages 镜像）+ 两侧产物逐文件哈希比对 | 锋 | **WIP** | G1、G3 | 双线工作流已入库（`pages.yml` + `docs/DEPLOY.md` 镜像指引）；**待一次性人工动作**：仓库 Settings→Pages 选 GitHub Actions、Cloudflare 建项目 |
+| G3 | `README.md` / `README.en.md` / 三平台 `INSTALL-*.md` | 锋 | **DONE** | — | 已产出并提交。~~三份安装说明当前仅中文~~ **校正（2026-10-02 实测）**：INSTALL-macos/linux 已是英文，仅 INSTALL-windows 中文，英文版随 G9 |
 | G4 | `scripts/platform_parity.py` 一致性腿（advisory） | 锋 | **DONE** | — | 已落地并带 5 条变异腿自测；真实两侧比对 PARITY OK |
 | G5 | token 文件权限收紧（Windows 需 ACL，`0o600` 在 NTFS 无效） | 锋 | TODO | — | 现状只传 filemode，Windows 下不生效 |
 | G6 | 控制台补齐四页（首页 / 技能库 / 诊断 / 设置）+ 前端路由 | 锋 | TODO | — | 现只有单页控制台 |
-| G7 | 技能三档目录（可开源 / 上游引用 / 不公开）与两级门禁 | 锋 | TODO | 脱敏口径定案 | 未开始；分级依据见 §1.1 |
+| G7 | 技能三档目录（可开源 / 上游引用 / 不公开）与两级门禁 | 锋 | **部分 DONE** | — | **开源档已落地（2026-10-02）**：`agent/internal/seed/pack/skills` 18 个通用技能，经 `scripts/build_seed.py` 消毒（身份/路径命中即丢弃）+ 终检零残留门禁；上游引用档与不公开档登记待做 |
 | G8 | 两个新入役平台由 beta 转 ga | 锋 | BLOCKED | 各一次真实会话装载面实测 | 程序侧装载行为未证，不实测不得转正 |
 | G9 | 中英双语（界面 + 文档） | 锋 | TODO | G6 | 现为中文硬编码 |
-| G10 | CI 三件（三平台交叉编译 / Pages 部署 / 镜像部署） | 锋 | TODO | G0、G1 | G0 已解前置；无远端仍无法接部署 |
+| G10 | CI 三件（三平台交叉编译 / Pages 部署 / 镜像部署） | 锋 | **WIP** | G0、G1 | 三工作流已入库（`release.yml` tag 触发五目标交叉编译 + Release、`ci.yml` 三 OS 矩阵测试/冒烟/parity、`pages.yml` 主站部署）；**待首个 tag 触发后按 G10 判据核验** |
 | G11 | P2 锦上添花（二进制签名 / 自动更新提示 / 彻底卸载 / 镜像端手动同步按钮） | 锋 | TODO | G2 | 未开始 |
 | G12 | 补齐接口缺口 `POST /api/roots`、`GET /api/skills` | 锋 | TODO | — | 接口契约有、实现无（实测路由表未注册） |
 | G13 | 平台定义与私有权威源的注入点差异裁决 | 人（裁决）+ 锋 | TODO | 逐端实测 | 公开仓与私有源对个别端的注入文件不一致，需以实测为准 |
-| G14 | `platforms.json` 的站点域名从占位符换成真实域名 | 人 | BLOCKED | G1 | 域名未定 |
+| G14 | `platforms.json` 的站点域名从占位符换成真实域名 | 人 | **DONE**（默认双域名口径） | G1 | `site.primary` = `lxh113377.github.io/global-memory-hub`、`site.mirror` = `global-memory-hub.pages.dev`，占位域名已清除；自定义域名降为可选项，换域名时同步改 `site.*` 即可 |
+| G15 | 空库引导与首启播种（2026-10-02 盘面实测新增：全新机器 enable 后库根不存在→BROKEN） | 锋 | **DONE** | — | `seed.Bootstrap` 接入 `state.Enable` 与 serve 启动：建根 + 空库播种（记忆骨架 + 18 技能），已有库零覆盖，链接不写穿；单测 4/4 + 假端端到端冒烟实测（enable→verify 2 OK→disable→再 enable 命中零覆盖） |
 
 #### §1.1 技能分级的依据（G7 为何必须分级）
 

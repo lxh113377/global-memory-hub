@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"path"
 	"runtime"
 	"strings"
@@ -36,12 +37,27 @@ func New(cfg *platform.Config, token string, port int, extraOrigins []string, di
 		"http://127.0.0.1:7799": true,
 		"http://localhost:7799": true,
 	}
+	// 线上控制台来源 (platforms.json site.*): 握手链接印的就是这些域名, 默认放行。
+	for _, site := range []string{cfg.Site.Primary, cfg.Site.Mirror} {
+		if o, ok := originOf(site); ok {
+			origins[o] = true
+		}
+	}
 	for _, o := range extraOrigins {
 		if o != "" {
 			origins[o] = true
 		}
 	}
 	return &Server{cfg: cfg, token: token, port: port, origins: origins, dist: dist}
+}
+
+// originOf 从站点 URL 提取 Origin (scheme://host[:port]); 非法输入返回 false。
+func originOf(site string) (string, bool) {
+	u, err := url.Parse(strings.TrimSpace(site))
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return "", false
+	}
+	return u.Scheme + "://" + u.Host, true
 }
 
 // Handler 返回带安全中间件的根处理器。
