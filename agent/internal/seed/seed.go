@@ -13,7 +13,16 @@ import (
 )
 
 //go:embed all:pack
-var packFS embed.FS
+var packEmbed embed.FS
+
+// packReader 是种子包读取面: fs.FS 供遍历, ReadFile 供读清单原文。
+type packReader interface {
+	fs.FS
+	ReadFile(name string) ([]byte, error)
+}
+
+// packFS 指向内嵌包本体; 测试可临时替换为 MapFS 以注入篡改内容 (反例腿)。
+var packFS packReader = packEmbed
 
 // SeedVersion 当前种子包版本; 升级内容时 bump, 已有库不受影响(零覆盖)。
 const SeedVersion = "0.1.0"
@@ -28,7 +37,12 @@ var packSubdir = map[string]string{
 }
 
 // Bootstrap 确保 roots 全部存在, 并对空库写入骨架。返回变更描述列表。
+// 铁律追加: 播种内容必须先过 pack 完整性校验 (VerifyPack), 校验在任何写入之前,
+// 失败即 fail-closed 返回, 不写 stamp、不留半成品。
 func Bootstrap(roots map[string]string) ([]string, error) {
+	if err := VerifyPack(); err != nil {
+		return nil, err
+	}
 	var changes []string
 	for _, key := range []string{"memory", "skills"} {
 		root, ok := roots[key]

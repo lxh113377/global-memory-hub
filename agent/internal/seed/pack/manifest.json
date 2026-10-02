@@ -1,0 +1,151 @@
+{
+  "schema": "fenjue-seed-manifest-v1",
+  "seed_version": "0.1.0",
+  "files": [
+    {
+      "path": "memory/MEMORY.md",
+      "sha256": "3b60a68c6b29f2e0a5243c5ae36bae51a11619c9fdf9917e494a92a21aaffd0f",
+      "bytes": 675
+    },
+    {
+      "path": "memory/SOUL.md",
+      "sha256": "5e57b7c97de129f20f4c7f9e0e8fae6a4199f36559953c05ec9702af5d5ed341",
+      "bytes": 318
+    },
+    {
+      "path": "memory/USER.md",
+      "sha256": "e25d4e715b2b7416ea5dfed6026b249c85f504f5f06eb6b83530c19888000f99",
+      "bytes": 286
+    },
+    {
+      "path": "memory/meta/memory_index.md",
+      "sha256": "fdf633954f162d2435b8e3400370a37a211a58df35573106282872c4c2eb12ea",
+      "bytes": 138
+    },
+    {
+      "path": "skills/brainstorming/SKILL.md",
+      "sha256": "bba47904a7f6bbee3bf8a107ebbe84e65d392be683bbb898ded736b29e415f90",
+      "bytes": 10634
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "sha256": "a5c3621103eddbe40184097fe1544d60f9509dae42419323cb02c4c7e3b01733",
+      "bytes": 4954
+    },
+    {
+      "path": "skills/consulting-analysis/SKILL.md",
+      "sha256": "04ef09dccdee8557ffce7525020aefa98950086e4cbe8d3a7aa7e641d8c4b277",
+      "bytes": 71653
+    },
+    {
+      "path": "skills/data-analysis/SKILL.md",
+      "sha256": "29cb6b54bbe941782bfc714121cc926ec95a954d521e75a9fb60427734d89e88",
+      "bytes": 8929
+    },
+    {
+      "path": "skills/debugging-fixing/SKILL.md",
+      "sha256": "4afc4b52248b62bf23215600191a996b0992c9c05e80530e8fef50f44d12d296",
+      "bytes": 4667
+    },
+    {
+      "path": "skills/debugging-fixing/references/verification.md",
+      "sha256": "8e85718c1b71efceba37733fce95ffa967f3bdf36d8210d8d802645c7d042172",
+      "bytes": 1872
+    },
+    {
+      "path": "skills/diagram-maker/SKILL.md",
+      "sha256": "5f990385f9368efe24b0897eb2ae98d07730b11e23746d63199aceecba389ae3",
+      "bytes": 2582
+    },
+    {
+      "path": "skills/diagram-maker/references/excalidraw-patterns.md",
+      "sha256": "6fc8799815adc1ef0171f25f59431e7e60bfa072ad570a60c335383bd872bf56",
+      "bytes": 1394
+    },
+    {
+      "path": "skills/diagram-maker/references/svg-template.md",
+      "sha256": "3a8b47dbaeb341377a4999ff227f088a3a7fe2bee7b1353929f11a1f30b20c71",
+      "bytes": 1930
+    },
+    {
+      "path": "skills/doc-coauthoring/SKILL.md",
+      "sha256": "2e47d78846faeea4a56e9809c52700087a15a2155a3f293a3efbaded81398ef4",
+      "bytes": 15815
+    },
+    {
+      "path": "skills/first-principles-decomposer/SKILL.md",
+      "sha256": "66e61ef7700156bdef42ab94dfb9a302638b14bee929caa739bc95521abe074f",
+      "bytes": 3034
+    },
+    {
+      "path": "skills/first-principles-decomposer/references/examples.md",
+      "sha256": "1b933e121d13fe4211ceefcb7f0654d767c6e6cb4f44c743a19301c2d1ab1b7c",
+      "bytes": 3438
+    },
+    {
+      "path": "skills/first-principles-decomposer/references/framework.md",
+      "sha256": "43c6443795567447743d4324b48710bb8d1bab0ee2679424aaa81d01d12fe19a",
+      "bytes": 2204
+    },
+    {
+      "path": "skills/first-principles-decomposer/references/integrated-frameworks.md",
+      "sha256": "a3c75ec93733cdc687f9ef4de35ac95a6cc814d1995c0db3aa989af48bb5f56f",
+      "bytes": 3659
+    },
+    {
+      "path": "skills/frontend-design/SKILL.md",
+      "sha256": "a14836e24bb6308eede8fd7c06c55cc06dfa98db888bee349ef4699bd7ab53ed",
+      "bytes": 10173
+    },
+    {
+      "path": "skills/knowledge-capture/SKILL.md",
+      "sha256": "956b91397b487aace7514929f786df080dfe08f4c9251ec4a06f256cbf9763c9",
+      "bytes": 7337
+    },
+    {
+      "path": "skills/prompt-consolidation/SKILL.md",
+      "sha256": "1072ab96fb08cc30f968973901e635b04b095e60d2fb33d625940f0fa0ad0698",
+      "bytes": 16120
+    },
+    {
+      "path": "skills/refactoring/SKILL.md",
+      "sha256": "bd74e496f0c7097fac50d4894431a7b2014ba1d19172b61bef8b55174ac6aee2",
+      "bytes": 4810
+    },
+    {
+      "path": "skills/research-documentation/SKILL.md",
+      "sha256": "f166c19f0b1cd6ba78ed0390dab1119fb6c2a171edc8495b3e1145eaed71493a",
+      "bytes": 3803
+    },
+    {
+      "path": "skills/scope-creep-detector/SKILL.md",
+      "sha256": "a21a28ce59694554c16ddc19cb3b27620b1e3e5040803df0e40b22f6a34da159",
+      "bytes": 5140
+    },
+    {
+      "path": "skills/scope-creep-detector/references/scope-signals.md",
+      "sha256": "c710c23e004cbc8c1e47b34eeafb41d441b8e7b4f7a37241da98f667a6e3da93",
+      "bytes": 3268
+    },
+    {
+      "path": "skills/spec-to-implementation/SKILL.md",
+      "sha256": "5939ba5076fffc2004c6aefc62a60232bebec7da651a5e445e5ac51aad28d356",
+      "bytes": 8808
+    },
+    {
+      "path": "skills/test-driven-development/SKILL.md",
+      "sha256": "65e284d52f345d85e7dd5e8d74f12ccfa4ef7917f253af1ea00a314d26c99f0d",
+      "bytes": 10086
+    },
+    {
+      "path": "skills/verification-before-completion/SKILL.md",
+      "sha256": "1ce98a8ad445b33445c5b3678f3b63acd376c4db4f0c984327cf0126d4d4ae8b",
+      "bytes": 7128
+    },
+    {
+      "path": "skills/writing-plans/SKILL.md",
+      "sha256": "90056bad3d5f196fa7c9fec0ffe592e6d9c86bc983e406642a51d1a4198b7024",
+      "bytes": 6046
+    }
+  ]
+}
