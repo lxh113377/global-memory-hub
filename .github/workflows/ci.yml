@@ -40,7 +40,8 @@ jobs:
       - name: e2e smoke on fake platform (never touches real mounts)
         run: |
           set -e
-          D="$RUNNER_TEMP/fenjue-smoke"
+          # Windows 的 RUNNER_TEMP 是反斜杠路径, 进 JSON 会成非法转义, 统一归一为正斜杠。
+          D="$(printf '%s' "$RUNNER_TEMP" | sed 's|\\|/|g')/fenjue-smoke"
           mkdir -p "$D"
           cat > "$D/platforms.json" <<EOF
           {
