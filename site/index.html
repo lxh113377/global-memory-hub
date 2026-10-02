@@ -46,6 +46,11 @@
   .faq summary { cursor:pointer; font-weight:600; font-size:15px; }
   .faq p { margin-top:10px; font-size:14px; color:var(--muted); }
   .faq code { background:#000; padding:1px 7px; border-radius:5px; font-size:13px; color:#f5c66b; }
+  .docgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(232px,1fr)); gap:14px; }
+  .docgrid .card { padding:18px 20px; }
+  .docgrid h3 { font-size:15px; margin:0 0 6px; }
+  .docgrid h3 a:hover { color:var(--brand1); }
+  .docgrid p { font-size:13px; color:var(--muted); }
   footer { border-top:1px solid var(--line); padding:30px 0; color:var(--muted); font-size:13px; text-align:center; }
   footer a { color:#f5c66b; }
 </style>
@@ -57,6 +62,7 @@
     <nav class="nav-links">
       <a href="#how">上手</a>
       <a href="#platforms">支持平台</a>
+      <a href="#docs">文档</a>
       <a href="#faq">安全与 FAQ</a>
       <a href="https://github.com/lxh113377/global-memory-hub" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -109,6 +115,63 @@
       </table>
     </div>
     <p class="lead" style="margin-top:14px">分平台安装细节见 GitHub 仓库 <a style="color:#f5c66b" href="https://github.com/lxh113377/global-memory-hub/tree/main/docs" target="_blank" rel="noopener">docs/INSTALL-*.md</a>（Windows / macOS / Linux）。</p>
+  </div>
+</section>
+
+<section id="docs">
+  <div class="wrap">
+    <h2>文档</h2>
+    <p class="lead">全部文档在仓库的 <code>docs/</code> 目录，随代码一起版本化。中文为主，README 提供中英双版。</p>
+    <div class="docgrid">
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/INSTALL-windows.md" target="_blank" rel="noopener">安装 · Windows</a></h3>
+        <p>下载、目录链接、常见阻碍与排查。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/INSTALL-macos.md" target="_blank" rel="noopener">安装 · macOS</a></h3>
+        <p>符号链接方式与系统目录布局。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/INSTALL-linux.md" target="_blank" rel="noopener">安装 · Linux</a></h3>
+        <p>含静态链接与 musl / Alpine 说明。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener">架构说明</a></h3>
+        <p>全局视图、三种挂载形态、令牌在请求链路上的位置。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/API.md" target="_blank" rel="noopener">HTTP API</a></h3>
+        <p>全部端点的鉴权、请求与响应、状态码、调用示例。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/PERFORMANCE.md" target="_blank" rel="noopener">性能实测</a></h3>
+        <p>三档规模实测数据、复杂度归因与这些数字的边界。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/SECURITY.md" target="_blank" rel="noopener">安全策略</a></h3>
+        <p>四道安全闸、已知限制、漏洞报告方式。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/FAQ.md" target="_blank" rel="noopener">常见问题</a></h3>
+        <p>令牌从哪来、停用会不会坏、怎么彻底卸载。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">贡献指南</a></h3>
+        <p>构建顺序、判据清单、种子包规约。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/CHANGELOG.md" target="_blank" rel="noopener">变更日志</a></h3>
+        <p>每个版本改了什么。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/ROADMAP.md" target="_blank" rel="noopener">路线图</a></h3>
+        <p>未完成任务、优先级与解锁条件。</p>
+      </div>
+      <div class="card">
+        <h3><a href="https://github.com/lxh113377/global-memory-hub/blob/main/docs/BENCHMARK-2026-10-02.md" target="_blank" rel="noopener">对标报告</a></h3>
+        <p>与同类开源项目的八维度对比、差距量化与改进清单。</p>
+      </div>
+    </div>
   </div>
 </section>
 
