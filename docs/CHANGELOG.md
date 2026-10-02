@@ -17,6 +17,9 @@
 - 种子内容安全门禁扩展：新增凭据形态与危险命令两类规则，每条规则配正反例，由 `--selftest` 强制。
 - 治理文档：[CONTRIBUTING.md](CONTRIBUTING.md)、[SECURITY.md](SECURITY.md)、[ARCHITECTURE.md](ARCHITECTURE.md)。
 - [BENCHMARK-2026-10-02.md](BENCHMARK-2026-10-02.md)：同类开源项目八维对标与改进清单。
+- G8 沙箱取证协议：[G8-DOCKER-PROTOCOL.md](G8-DOCKER-PROTOCOL.md) 与 `scripts/g8_sandbox/`。
+  在隔离容器内对 `mm` / `ds` 跑 enable/verify/link/zero-overwrite 与一条反例腿，
+  输出 NDJSON、退出码三态。实测 rc=0，程序侧装载行为由此证实；消费行为仍 UNVERIFIED。
 
 ### 变更
 
