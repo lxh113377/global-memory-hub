@@ -21,6 +21,7 @@ import (
 	"fenjue-agent/internal/logx"
 	"fenjue-agent/internal/platform"
 	"fenjue-agent/internal/safeio"
+	"fenjue-agent/internal/seed"
 	"fenjue-agent/internal/server"
 	"fenjue-agent/internal/state"
 )
@@ -136,6 +137,16 @@ func cmdServe(args []string) {
 	initLogging()
 	defer logx.Close()
 	cfg := mustConfig(*cf.platforms)
+
+	// 启动即引导统一库: 目录不存在则建, 空库播种; 已有库零覆盖。
+	seedChanges, err := seed.Bootstrap(cfg.Roots)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error: bootstrap roots:", err)
+		os.Exit(1)
+	}
+	for _, c := range seedChanges {
+		fmt.Println("hub:", c)
+	}
 
 	token, err := currentToken()
 	if err != nil {
