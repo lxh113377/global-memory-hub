@@ -67,7 +67,9 @@
 | 种子包 | memory 骨架 4 件 + 技能 **18 条**（全部过消毒门禁） |
 | CI | 3 条 workflow：`ci`（vet + test + smoke，三平台矩阵；parity 为 advisory）/ `pages` / `release`（5 目标） |
 | 文档 | `README.md`(192 行) + `README.en.md`(194 行) + INSTALL×4 + DEPLOY + ROADMAP + SKILLS-TIERS |
-| 缺失文档 | **CONTRIBUTING / SECURITY / CHANGELOG / ARCHITECTURE / FAQ** |
+| 缺失文档 | **无**。⚠️ **2026-10-02 复核校正**：本行原写作「缺失 CONTRIBUTING / SECURITY / CHANGELOG / ARCHITECTURE / FAQ」，该口径取自初次盘点时点，五件已于同日落地（提交 `000a0b3`），与 §7.2 的对账表矛盾。**以本行为准**，逐项落地态见 §7.2 |
+
+> **§1.5 的时点声明**：本节是报告取数时点（`2cf6496`）的 hub 基线快照。复核轮（`910cd0e`）实测该节有两处已过期——① 上表的缺失文档一行；② 文档清单未含后补的 `BENCHMARK` / `SKILLS-TIERS` / `G8-DOCKER-PROTOCOL`。其余项复核仍成立（星标 1、9 平台、双根、3 种挂载形态、回环 + 四道安全闸）。逐项复算命令见 §7.1。
 
 ---
 
@@ -189,7 +191,7 @@
 | **P0-1** | **清除仓内个人标识明文** | `[实测]` 种子构建脚本把个人姓名、学号、用户名作为**消毒规则的字面量**写进了公开仓（6 处）。消毒本身有效（种子包内零残留），但**规则字面量本身就是泄漏面**，且任何 fork/镜像/爬取都会带走 | 仓内 `grep` 个人标识 = 0 命中；消毒规则改为**通用启发式**（正则识别学号形态、用户目录形态），不再依赖针对特定个人的字面量；终检 fail-closed 保持 |
 | **P0-2** | **版本一致性机器判据** | `[实测]` 版本号分散在 4 处（git tag / `router.go` 常量 / `platforms.json` / `seed.go`），且**已发生过实际漂移**（提交自述「drifted since v0.2.1, caught by docker round」）。靠人记必然复发 | CI 新增判据腿：tag ↔ 产品版本常量 ↔ 平台定义版本 三者一致；种子包版本另立子判据（语义独立，不与产品版本强绑）；**篡改反例腿必红**（否则判据视为未成立） |
 | **P0-3** | **种子包 manifest（SHA-256）** | `[实测]` 种子包无任何完整性凭据。「零覆盖」保证不破坏用户数据，但无法证明**写入内容本身**未被篡改——这是分发链路上最实质的缺口 | 构建脚本生成 `manifest.json`（路径 + SHA-256 + 字节数，字典序保证确定性）；播种前**在任何写入之前** fail-closed 全量校验；`go test` 覆盖正例 + **篡改反例必失败**；独立校验脚本做第二实现交叉验（防「自比恒等」假通过） |
-| **P0-4** | **治理三件套** | 缺 CONTRIBUTING / SECURITY / CHANGELOG。安全闸有四道（Host 校验 / 来源白名单 / CORS / 恒定时间令牌比较）却无对外的 SECURITY 说明 | 三件套落盘并从 README 链接；SECURITY 明确「仅监听回环 + 令牌模型 + 漏洞报告渠道」 |
+| **P0-4** | **治理五件套** | 原缺 CONTRIBUTING / SECURITY / CHANGELOG。安全闸有四道（Host 校验 / 来源白名单 / CORS / 恒定时间令牌比较）却无对外的 SECURITY 说明。**校正（2026-10-02 收口轮）**：本项落地时实际产出五件（增 ARCHITECTURE 与 FAQ），与 P1-3 合并计一项，故本表统一称「五件套」 | 五件套落盘并从 README 双向链接；SECURITY 明确「仅监听回环 + 令牌模型 + 漏洞报告渠道」 |
 | **P0-5** | **README 徽章与定位对比** | 缺徽章 = 首页无任何可信度信号；缺定位说明 = 新访客无法判断「该不该用我」 | 徽章指向**真实 workflow**（CI / Release / License / 平台数）；补「同类项目定位对比表」；徽章链接实测可达 |
 
 ### P1 —— 建议次轮落地
@@ -230,7 +232,7 @@
 
 ### 阶段 M2 · 门面与治理（P0-4 ~ P0-5 + P1-1）
 
-1. 治理三件套落盘
+1. 治理五件套落盘（CONTRIBUTING / SECURITY / CHANGELOG / ARCHITECTURE / FAQ；架构与 FAQ 原为本报告 P1-3，落地时并入本阶段）
 2. README 徽章 + 定位对比表
 3. 徽章渲染核验（CI / Release / License / 平台数 四个徽章的链接与图片都要实测可达）
 
@@ -261,3 +263,47 @@
 - hub 自身：`D:\global-memory-hub` @ `2cf6496`，2026-10-02 实测
 - 对标元数据：GitHub REST API（认证态），取数当日 2026-10-02
 - 各项目主页见 §1 表格内链接
+
+---
+
+## 7. 执行状态回写（2026-10-02 收口轮）
+
+本节解决一个具体问题：§3 的建议清单与 §4 的阶段路径全部用**将来时**写成（「建议本轮落地」「本轮不做」），而报告产出后这些条目已陆续实施。读者若只读 §3/§4，会把已完成的事误判为待办。本节把**实施结果**逐条回写，与 [ROADMAP](ROADMAP.md) 的 G 编号一一对应。
+
+### 7.1 对账基线（复算命令）
+
+```
+git log --oneline -12
+git describe --tags
+git rev-list --left-right --count origin/main...HEAD
+gh run list --limit 10
+```
+
+对账时实测：`HEAD = 910cd0e`（`git describe --tags` = `v0.2.2-10-g910cd0e`）、工作树干净、与 `origin/main` **0 ahead / 0 behind**、最近 10 条 CI/Pages/Release 结论全 `success`。§6 记录的 `2cf6496` 是**报告取数时点**，不是当前 HEAD，两者不矛盾。
+
+### 7.2 逐项落地状态
+
+| 报告编号 | ROADMAP | 状态 | 落地提交 | 可复算命令 |
+|---|---|---|---|---|
+| P0-1 清除仓内个人标识明文 | G16 | **已落地** | `53d71a3`（另 `1a49ba8` 配套忽略本地消毒规则） | `python scripts/build_seed.py --selftest` |
+| P0-2 版本一致性机器判据 | G17 | **已落地** | `f01ef24` | `python scripts/check_version_sync.py`（篡改常量 ⇒ rc=1；无 tag 浅克隆 ⇒ UNVERIFIED 不折算通过） |
+| P0-3 种子包 manifest（SHA-256） | G18 | **已落地** | `f656252`，配套 `890b764` | `python scripts/verify_seed_manifest.py`（+1 字节 ⇒ rc=1）；Go 侧 `go test ./agent/internal/seed/` |
+| P0-4 治理五件套 | G19 | **已落地** | `000a0b3` | 目录实测 `docs/{CONTRIBUTING,SECURITY,CHANGELOG,ARCHITECTURE,FAQ}.md` |
+| P0-5 README 徽章与定位对比 | G19 | **已落地** | `d230a73` | README 徽章指向 `.github/workflows/{ci,release}.yml` 真实 workflow |
+| P1-1 仓库卫生（构建产物入库） | — | **已否证，不需处理** | — | `git ls-files agent/cmd/fenjue-agent/dist` 只含 `.gitkeep`；`git check-ignore -v` 命中 `.gitignore:4` |
+| P1-2 seed 内容安全扫描规则集扩展 | G19 | **已落地** | `53d71a3` | 每条规则配正反例，由 `--selftest` 强制 |
+| P1-3 ARCHITECTURE + FAQ | G19 | **已落地**（并入 P0-4 计数） | `000a0b3` | 同 P0-4 |
+| P1-4 ROADMAP 增补 | — | **已落地** | `3fc6e60` | G16–G26 已登记；G22–G26 保持 TODO |
+| 平台矩阵扩展 | G21 | **已撤销（重复建设）** | — | `platforms.json` 实测已是 9 端；mm/ds 转正改由 G8 承载 |
+| 双语对齐 | — | **降级为随新章节同步** | `d230a73` | README 中英双版徽章与定位表同步 |
+| P2-1 ~ P2-4 | G22–G25 | **仍为 TODO（按计划本轮不做）** | — | ROADMAP 状态列 |
+
+### 7.3 本轮（收口轮）实际改动
+
+**无任何运行时行为变更**：未改 `agent/`、`scripts/`、`web/`、`site/`、`platforms.json`、`.github/workflows/`。改动面只有三份文档——本节、本报告两处「三件套→五件套」措辞校正（对齐 ROADMAP G19 的实际口径）、ROADMAP 的提交号补登与进度更新、CHANGELOG 一条记录。
+
+### 7.4 仍开放的待办（不在本轮范围）
+
+- `mm` / `ds` 由 beta 转 ga：程序侧装载行为已在 Docker 沙箱证实，**消费行为仍 UNVERIFIED**，需一台装有对应桌面客户端的干净机器跑 enable → 真实会话 → 读库验证（见 ROADMAP G8 与 [G8-DOCKER-PROTOCOL.md](G8-DOCKER-PROTOCOL.md)）。
+- G22–G26 五项 TODO（预设批量启停 / 项目级工作区 / Agent 自主管理出口 / 发行校验和 / 规模压测）。其中 G24 明确**先定安全边界再实现**。
+- 规模压测缺口：本报告 §5.3 已声明不做性能数字断言，在 G26 补数据前该口径不变。
