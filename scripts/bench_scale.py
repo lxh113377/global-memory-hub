@@ -144,12 +144,18 @@ def build_platforms(scale: dict, sandbox: Path) -> tuple[Path, Path, Path, int]:
             }
         )
 
+    # 预设段: 沙箱也带上, 这样 API 的 live 探测能在同一份配置上验证批量端点。
+    # 规模按档位缩放, 但至少两个, 以便验证"未知预设名 -> 404"这类分支。
     doc = {
         "schema": "fenjue-platforms-v1",
         "version": "0.0.0-bench",
         "roots": {"memory": str(memory_root), "skills": str(skills_root)},
         "site": {"primary": "https://example.invalid", "mirror": "", "local": "http://127.0.0.1:7799"},
         "platforms": platforms,
+        "presets": [
+            {"name": "bench-all", "label": "Bench all", "platforms": [p["id"] for p in platforms]},
+            {"name": "bench-one", "label": "Bench one", "platforms": [platforms[0]["id"]]},
+        ],
     }
     cfg_path = sandbox / "platforms.json"
     cfg_path.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")

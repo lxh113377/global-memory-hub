@@ -75,17 +75,21 @@ def routes_from_router(path: Path) -> tuple[list[str], list[str]]:
     return sorted(exact), sorted(subtrees)
 
 
+# router.go 里以斜杠结尾的子树注册。文档里它们会写成 {id}/{action}、具体示例路径,
+# 或泛指的 /*, 三种写法都要归一到同一个前缀形式, 否则对账会误判。
+SUBTREE_PREFIXES = ("/api/platforms/", "/api/presets/")
+
+
 def normalize_endpoint(path: str) -> str:
     """把子树端点的各种书写形态归一。
 
-    router.go 对平台操作只注册一个子树 ``/api/platforms/``（结尾斜杠, 子树匹配）,
-    而文档里会出现四种写法: ``/api/platforms/{id}/{action}``、
-    ``/api/platforms/{id}/{enable|disable|restore}``、具体示例
-    ``/api/platforms/hm/enable``、以及泛指的 ``/api/platforms/*``。
-    不归一就会把"文档写了示例"误判成"文档写了一个不存在的独立端点"。
+    例如 ``/api/platforms/{id}/{action}``、``/api/platforms/hm/enable``、
+    ``/api/presets/{name}`` 都归一为 ``<prefix>/*``。不归一就会把"文档写了示例"
+    误判成"文档写了一个不存在的独立端点"。
     """
-    if path.startswith("/api/platforms/"):
-        return "/api/platforms/*"
+    for prefix in SUBTREE_PREFIXES:
+        if path.startswith(prefix):
+            return prefix + "*"
     return path
 
 
@@ -191,31 +195,42 @@ def selftest() -> int:
 
 def http_json(port: int, method: str, path: str, token: str | None = None,
               origin: str | None = None, host: str | None = None,
-              body: dict | None = None) -> tuple[int, dict]:
-    url = "http://127.0.0.1:%d%s" % (port, path)
-    data = json.dumps(body).encode("utf-8") if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
-    if token:
-        req.add_header("X-Fenjue-Token", token)
-    if origin:
-        req.add_header("Origin", origin)
-    if host:
-        req.add_header("Host", host)
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            raw = resp.read().decode("utf-8", "replace")
-            try:
-                return resp.status, json.loads(raw)
-            except json.JSONDecodeError:
-                return resp.status, {"raw": raw[:200]}
-    except urllib.error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", "replace")
+              body: dict | None = None, attempts: int = 3) -> tuple[int, dict]:
+    """发一次请求并解析 JSON 响应。
+
+    传输层错误(连接被重置/超时)会重试有限的次数: 本机回环上偶发 WinError 10054,
+    一次抖动不该被报成"契约不符"。**HTTP 状态码错误不重试** —— 4xx/5xx 是服务端的
+    真实回答, 重试只会把一个确定的结论变成一个不确定的。
+    """
+    last: tuple[int, dict] = (0, {"error": "no attempt"})
+    for attempt in range(attempts):
+        url = "http://127.0.0.1:%d%s" % (port, path)
+        data = json.dumps(body).encode("utf-8") if body is not None else None
+        req = urllib.request.Request(url, data=data, method=method)
+        if token:
+            req.add_header("X-Fenjue-Token", token)
+        if origin:
+            req.add_header("Origin", origin)
+        if host:
+            req.add_header("Host", host)
         try:
-            return exc.code, json.loads(raw)
-        except json.JSONDecodeError:
-            return exc.code, {"raw": raw[:200]}
-    except (urllib.error.URLError, OSError) as exc:
-        return 0, {"error": "transport: %s" % exc}
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                raw = resp.read().decode("utf-8", "replace")
+                try:
+                    return resp.status, json.loads(raw)
+                except json.JSONDecodeError:
+                    return resp.status, {"raw": raw[:200]}
+        except urllib.error.HTTPError as exc:
+            raw = exc.read().decode("utf-8", "replace")
+            try:
+                return exc.code, json.loads(raw)
+            except json.JSONDecodeError:
+                return exc.code, {"raw": raw[:200]}
+        except (urllib.error.URLError, OSError) as exc:
+            last = (0, {"error": "transport: %s" % exc})
+            if attempt + 1 < attempts:
+                time.sleep(0.25 * (attempt + 1))
+    return last
 
 
 def live_probe() -> tuple[list[str], list[str]]:
@@ -234,12 +249,13 @@ def live_probe() -> tuple[list[str], list[str]]:
     sandbox.mkdir(parents=True, exist_ok=True)
 
     binary = bs.SANDBOX_ROOT / ("fenjue-agent-bench%s" % (".exe" if os.name == "nt" else ""))
-    if not binary.exists():
-        bs.SANDBOX_ROOT.mkdir(parents=True, exist_ok=True)
-        r = subprocess.run(["go", "build", "-o", str(binary), "./cmd/fenjue-agent"],
-                           cwd=str(REPO / "agent"), capture_output=True, check=False)
-        if r.returncode != 0:
-            return [], ["go build failed: %s" % r.stderr.decode("utf-8", "replace")[-300:]]
+    # 每次都重建: 复用一个旧二进制会让探测去测**上一个版本**的实现, 于是新加的端点
+    # 报 404, 而结论看起来像是"实现漏了端点"。测的必须是当前代码。
+    bs.SANDBOX_ROOT.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(["go", "build", "-o", str(binary), "./cmd/fenjue-agent"],
+                       cwd=str(REPO / "agent"), capture_output=True, check=False)
+    if r.returncode != 0:
+        return [], ["go build failed: %s" % r.stderr.decode("utf-8", "replace")[-300:]]
 
     scale = {"name": "API", "platforms": 2, "skills": 3, "files": 10}
     try:
@@ -323,6 +339,27 @@ def live_probe() -> tuple[list[str], list[str]]:
         got, payload = call("POST", "/api/roots", tok=True, body={})
         if got != 400:
             problems.append("POST /api/roots with neither memory nor skills must be 400, got %d (%r)" % (got, payload))
+
+        # 预设: 列表 / dry-run / 真做 / 未知名 / 非法 action。
+        got, payload = call("GET", "/api/presets", tok=True)
+        if got != 200 or not isinstance(payload.get("presets"), list) or payload.get("total", 0) < 1:
+            problems.append("GET /api/presets must list the sandbox presets, got %d (%r)" % (got, payload))
+        else:
+            names = [p.get("name") for p in payload["presets"]]
+            if "bench-one" not in names:
+                problems.append("GET /api/presets did not report the configured preset name, got %r" % names)
+        got, payload = call("POST", "/api/presets/bench-one", tok=True, body={"action": "enable", "dry_run": True})
+        if got != 200 or payload.get("dryRun") is not True or len(payload.get("members") or []) != 1:
+            problems.append("a preset dry-run must report members without writing, got %d (%r)" % (got, payload))
+        got, payload = call("POST", "/api/presets/bench-one", tok=True, body={"action": "enable"})
+        if got != 200 or not payload.get("ok") or not payload.get("members"):
+            problems.append("a preset enable must report per-member results, got %d (%r)" % (got, payload))
+        got, payload = call("POST", "/api/presets/no-such-preset", tok=True, body={"action": "enable"})
+        if got != 404:
+            problems.append("an unknown preset must be 404, got %d (%r)" % (got, payload))
+        got, payload = call("POST", "/api/presets/bench-one", tok=True, body={"action": "wipe"})
+        if got != 400:
+            problems.append("an invalid preset action must be 400, got %d (%r)" % (got, payload))
     finally:
         if proc.poll() is None:
             proc.terminate()

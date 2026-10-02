@@ -96,3 +96,41 @@ export interface RootsSetResult {
   note: string;
   roots: Record<string, string>;
 }
+
+/** One preset entry of GET /api/presets. Members are configured, never hard-coded. */
+export interface PresetInfo {
+  name: string;
+  label: string;
+  note: string;
+  platforms: string[];
+}
+
+/** GET /api/presets */
+export interface PresetsResponse {
+  ok: boolean;
+  presets: PresetInfo[];
+  total: number;
+}
+
+/** One member outcome of POST /api/presets/{name}. */
+export interface PresetMember {
+  id: string;
+  action: string;
+  ok: boolean;
+  backupId?: string;
+  changes?: ChangeEntry[];
+  error?: string;
+}
+
+/**
+ * POST /api/presets/{name}. Per-member rather than a single OpResult: after a batch
+ * the user needs to know what happened to EACH end, not one aggregate ok.
+ */
+export interface PresetResult {
+  preset: string;
+  label: string;
+  action: string;
+  dryRun: boolean;
+  ok: boolean;
+  members: PresetMember[];
+}

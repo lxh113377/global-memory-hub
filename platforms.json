@@ -1,7 +1,7 @@
 {
   "schema": "fenjue-platforms-v1",
-  "version": "1.0.0",
-  "_note": "Single source of truth for all 9 platform mount plans. Go agent and web frontend both derive from this file at RUNTIME (no compile-time generation). Paths use ~ / %USERPROFILE% / $HOME expansion only; personal absolute paths are forbidden. support: ga = verified, beta = entered service but consumption behavior not yet verified.",
+  "version": "1.1.0",
+  "_note": "Single source of truth for all 9 platform mount plans. Go agent and web frontend both derive from this file at RUNTIME (no compile-time generation). Paths use ~ / %USERPROFILE% / $HOME expansion only; personal absolute paths are forbidden. support: ga = verified, beta = entered service but consumption behavior not yet verified. v1.1.0 adds the optional presets array (batch toggle by name); it is backward compatible, a config without presets still loads with zero presets.",
   "roots": {
     "memory": "~/.fenjue/memory",
     "skills": "~/.fenjue/skills"
@@ -140,6 +140,20 @@
         { "path": "~/.dsh/SOUL.md", "mode": "marker" }
       ],
       "notes": "Entered service 2026-10-01; program-side loading behavior not yet verified. No native skills/memory dirs to back up."
+    }
+  ],
+  "presets": [
+    {
+      "name": "core",
+      "label": "Core ends (directory links only)",
+      "note": "Only ends that mount by directory link. Mirror (cx) and per-skill (hm) ends are left out on purpose: they move hundreds of items, so batch-toggling them deserves a deliberate act rather than riding along with a routine switch.",
+      "platforms": ["wb", "tr", "zc", "oc", "qd"]
+    },
+    {
+      "name": "all",
+      "label": "Every end, including beta",
+      "note": "Includes mm and ds, whose consumption behavior is still marked beta. Use it when you deliberately want the beta ends on.",
+      "platforms": ["wb", "tr", "cx", "hm", "zc", "oc", "qd", "mm", "ds"]
     }
   ]
 }

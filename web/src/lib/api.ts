@@ -2,6 +2,8 @@ import type {
   AppState,
   HealthInfo,
   MutationResult,
+  PresetResult,
+  PresetsResponse,
   RootsSetResult,
   SkillsResponse,
   VerifyReport,
@@ -147,6 +149,27 @@ export function syncPlatform(id: string): Promise<MutationResult> {
     `/api/platforms/${encodeURIComponent(id)}/sync`,
     "POST",
     {}
+  );
+}
+
+/** List configured presets (empty array when platforms.json has no presets section). */
+export function fetchPresets(): Promise<PresetsResponse> {
+  return request<PresetsResponse>("/api/presets");
+}
+
+/**
+ * Apply a preset to every member. dryRun=true resolves members and reports without
+ * touching a single file, which is what the console shows before the real button.
+ */
+export function applyPreset(
+  name: string,
+  action: "enable" | "disable",
+  dryRun = false
+): Promise<PresetResult> {
+  return request<PresetResult>(
+    `/api/presets/${encodeURIComponent(name)}`,
+    "POST",
+    { action, dry_run: dryRun }
   );
 }
 

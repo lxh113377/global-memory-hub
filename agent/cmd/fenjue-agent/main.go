@@ -58,6 +58,8 @@ func main() {
 		cmdToggle(args, false)
 	case "uninstall":
 		cmdUninstall(args)
+	case "preset":
+		cmdPreset(args)
 	case "version":
 		cmdVersion(args)
 	default:
@@ -76,6 +78,7 @@ usage:
   fenjue-agent enable <id>   [--platforms <path>]
   fenjue-agent disable <id>  [--soft=true] [--platforms <path>]
   fenjue-agent uninstall [--yes] [--hard=true] [--platforms <path>]
+  fenjue-agent preset <name> [--action enable|disable] [--dry-run] [--platforms <path>]
   fenjue-agent version [--check]
 
 serve hosts the local console on 127.0.0.1 only and prints a handshake link.
