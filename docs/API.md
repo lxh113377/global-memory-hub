@@ -248,7 +248,88 @@ curl -s -X POST -H "X-Fenjue-Token: $TOKEN" http://127.0.0.1:7799/api/platforms/
 
 ---
 
-### 3.7 静态页与前端资源 —— 免令牌
+### 3.7 命名预设（批量启停）
+
+预设是**配置里定义的一组平台 id**，由 `platforms.json` 的 `presets` 段给出：
+
+```json
+"presets": [
+  { "name": "core", "label": "Core ends", "note": "为什么是这批",
+    "platforms": ["wb", "tr", "zc", "oc", "qd"] }
+]
+```
+
+**成员由你决定，程序不内置任何分组。** 哪些端该一起开只有使用者知道，因此这里只提供机制。
+没有 `presets` 段时功能不可用，但配置依然合法（旧配置零影响）。
+
+#### `GET /api/presets` —— 需令牌
+
+```bash
+curl -s -H "X-Fenjue-Token: $TOKEN" http://127.0.0.1:7799/api/presets
+```
+
+```json
+{ "ok": true, "total": 1,
+  "presets": [ { "name": "core", "label": "Core ends", "note": "...", "platforms": ["wb","tr"] } ] }
+```
+
+没有预设时返回 `total: 0` 与空数组，**不是** 404 —— 「你还没配预设」是正常状态。
+
+#### `POST /api/presets/{name}` —— 需令牌
+
+```bash
+# 先看要动哪些端 (dry-run 不碰任何文件)
+curl -s -X POST -H "X-Fenjue-Token: $TOKEN" -H "Content-Type: application/json" \
+  -d '{"action":"enable","dry_run":true}' http://127.0.0.1:7799/api/presets/core
+
+# 真做
+curl -s -X POST -H "X-Fenjue-Token: $TOKEN" -H "Content-Type: application/json" \
+  -d '{"action":"enable"}' http://127.0.0.1:7799/api/presets/core
+```
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `action` | `enable` | `enable` 或 `disable`。其他值 → `400` |
+| `dry_run` | `false` | `true` 时只列出成员与将要执行的动作，不写任何文件 |
+
+响应体是**逐端结果**（`state.PresetResult`），不是单个 `OpResult`：
+
+```json
+{
+  "preset": "core", "label": "Core ends", "action": "enable", "dryRun": false, "ok": true,
+  "members": [
+    { "id": "wb", "action": "enable", "ok": true, "backupId": "20261002-183000-ab12cd", "changes": ["..."] },
+    { "id": "tr", "action": "enable", "ok": true, "backupId": "20261002-183001-cd34ef", "changes": ["..."] }
+  ]
+}
+```
+
+三条必须知道的行为：
+
+| 行为 | 说明 |
+|---|---|
+| **成员各自独立备份** | 每个成员都带自己的 `backupId`，用单端 `restore` 即可回滚其中之一 |
+| **部分失败继续执行** | 某个成员失败不会中断整批，整体 `ok` 记 `false`，逐端原因在 `members[].error`。宁可给一份「哪几个成了」的清楚账，也不要留一个半途而废的糊涂状态 |
+| **批量停用一律软关闭** | 等价于 `soft: true`（摘链接 + 注入块改停用短壳）。硬关闭会删掉注入块，那是单端逐条确认才该做的动作，不该被一个批量按钮顺手做掉 |
+
+未知预设名 → `404 unknown preset "..."`；路径多了一段 → `404 expected /api/presets/{name}`。
+
+> 校验发生在**加载配置时**：预设引用了不存在的平台 id，`fenjue-agent` 会拒绝启动而不是运行时静默跳过。
+> 这条规则由 `scripts/check_preset_config.py` 在 CI 里独立复核（Python 第二实现，与 Go 侧互为交叉验）。
+
+命令行等价物：
+
+```bash
+fenjue-agent preset core --dry-run
+fenjue-agent preset core --action enable
+fenjue-agent preset core --action disable
+```
+
+CLI 与 HTTP 共用同一个编排函数，因此两边的备份号、错误文案与软关闭语义完全一致。
+
+---
+
+### 3.8 静态页与前端资源 —— 免令牌
 
 | 路径 | 返回 |
 |---|---|

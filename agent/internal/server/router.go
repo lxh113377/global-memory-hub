@@ -68,6 +68,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/verify", s.handleVerify)
 	mux.HandleFunc("/api/skills", s.handleSkills)
 	mux.HandleFunc("/api/roots", s.handleRootsSet)
+	mux.HandleFunc("/api/presets", s.handlePresets)
+	mux.HandleFunc("/api/presets/", s.handlePresetOp)
 	mux.HandleFunc("/api/platforms/", s.handlePlatformOp)
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "unknown api path "+r.URL.Path)

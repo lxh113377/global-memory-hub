@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import PlatformCard from "./components/PlatformCard";
+import PresetCard from "./components/PresetCard";
 import Diagnostics from "./pages/Diagnostics";
 import Settings from "./pages/Settings";
 import Skills from "./pages/Skills";
 import {
   ApiError,
+  applyPreset,
   disablePlatform,
   enablePlatform,
   fetchHealth,
+  fetchPresets,
   fetchState,
   hasToken,
   initTokenFromHash,
@@ -20,6 +23,8 @@ import type {
   HealthInfo,
   MutationResult,
   PlatformInfo,
+  PresetInfo,
+  PresetResult,
 } from "./lib/types";
 
 type ConnState = "checking" | "online" | "offline";
@@ -67,16 +72,28 @@ function Home({
   busy,
   results,
   actionErrors,
+  presets,
+  presetBusy,
+  presetResults,
+  presetErrors,
   onToggle,
   onSync,
+  onPresetDryRun,
+  onPresetApply,
 }: {
   state: AppState | null;
   stateError: string | null;
   busy: Record<string, boolean>;
   results: Record<string, MutationResult>;
   actionErrors: Record<string, string>;
+  presets: PresetInfo[];
+  presetBusy: Record<string, boolean>;
+  presetResults: Record<string, PresetResult>;
+  presetErrors: Record<string, string>;
   onToggle: (p: PlatformInfo, next: boolean) => void;
   onSync: (p: PlatformInfo) => void;
+  onPresetDryRun: (p: PresetInfo) => void;
+  onPresetApply: (p: PresetInfo, action: "enable" | "disable") => void;
 }) {
   const { t } = useT();
   const platforms = state?.platforms ?? [];
@@ -107,6 +124,28 @@ function Home({
           {t("stateErrorPrefix")}
           {stateError}
         </p>
+      )}
+
+      {presets.length > 0 && (
+        <section className="mb-6">
+          <div className="glass-panel mb-3 flex flex-col gap-1 px-5 py-4">
+            <h2 className="text-lg font-bold brand-gradient-text">{t("presetTitle")}</h2>
+            <p className="text-xs text-zinc-400">{t("presetSub")}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {presets.map((p) => (
+              <PresetCard
+                key={p.name}
+                preset={p}
+                busy={Boolean(presetBusy[p.name])}
+                result={presetResults[p.name] ?? null}
+                error={presetErrors[p.name] ?? null}
+                onDryRun={onPresetDryRun}
+                onApply={onPresetApply}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {platforms.length === 0 && !stateError ? (
@@ -148,6 +187,10 @@ function Shell() {
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   const [batchBusy, setBatchBusy] = useState<BatchMode | null>(null);
   const [batchMsg, setBatchMsg] = useState<string | null>(null);
+  const [presets, setPresets] = useState<PresetInfo[]>([]);
+  const [presetBusy, setPresetBusy] = useState<Record<string, boolean>>({});
+  const [presetResults, setPresetResults] = useState<Record<string, PresetResult>>({});
+  const [presetErrors, setPresetErrors] = useState<Record<string, string>>({});
   const [tokenInput, setTokenInput] = useState("");
 
   useEffect(() => {
@@ -181,14 +224,26 @@ function Shell() {
     }
   }, []);
 
+  const refreshPresets = useCallback(async () => {
+    try {
+      const r = await fetchPresets();
+      setPresets(r.presets ?? []);
+    } catch {
+      // An agent older than the presets endpoint answers 404. Treat that as
+      // "no presets" instead of an error: the console must still work.
+      setPresets([]);
+    }
+  }, []);
+
   useEffect(() => {
     initTokenFromHash();
     setTokenPresent(hasToken());
     void refreshState();
+    void refreshPresets();
     void probeHealth();
     const timer = window.setInterval(() => void probeHealth(), POLL_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [probeHealth, refreshState]);
+  }, [probeHealth, refreshState, refreshPresets]);
 
   const handleToggle = useCallback(
     async (p: PlatformInfo, next: boolean) => {
@@ -274,6 +329,40 @@ function Shell() {
       );
     },
     [state, batchBusy, refreshState, t]
+  );
+
+  const runPreset = useCallback(
+    async (preset: PresetInfo, action: "enable" | "disable", dryRun: boolean) => {
+      setPresetBusy((prev) => ({ ...prev, [preset.name]: true }));
+      setPresetErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[preset.name];
+        return copy;
+      });
+      try {
+        const res = await applyPreset(preset.name, action, dryRun);
+        setPresetResults((prev) => ({ ...prev, [preset.name]: res }));
+        if (!dryRun) {
+          await refreshState();
+          await refreshPresets();
+        }
+      } catch (e) {
+        setPresetErrors((prev) => ({ ...prev, [preset.name]: describeError(e) }));
+      } finally {
+        setPresetBusy((prev) => ({ ...prev, [preset.name]: false }));
+      }
+    },
+    [refreshState, refreshPresets]
+  );
+
+  const handlePresetDryRun = useCallback(
+    (p: PresetInfo) => runPreset(p, "enable", true),
+    [runPreset]
+  );
+
+  const handlePresetApply = useCallback(
+    (p: PresetInfo, action: "enable" | "disable") => runPreset(p, action, false),
+    [runPreset]
   );
 
   const anyBusy = batchBusy !== null;
@@ -395,8 +484,14 @@ function Shell() {
             busy={busy}
             results={results}
             actionErrors={actionErrors}
+            presets={presets}
+            presetBusy={presetBusy}
+            presetResults={presetResults}
+            presetErrors={presetErrors}
             onToggle={handleToggle}
             onSync={handleSync}
+            onPresetDryRun={handlePresetDryRun}
+            onPresetApply={handlePresetApply}
           />
         )}
         {route === "skills" && <Skills />}

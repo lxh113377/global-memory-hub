@@ -48,12 +48,25 @@ type rawSite struct {
 	Local   string `json:"local"`
 }
 
+// rawPreset 命名预设: 一组平台 id 的批量启停。字段全部可选, 缺省即没有预设。
+//
+// 为什么成员由配置决定而不是写死在代码里: 哪些端该一起开, 只有用户自己知道。
+// 把它写死成 "ga 全集" 之类的语义, 换个人、换个平台矩阵就得改代码, 而且改错了没法从
+// 使用现场看出来。这里刻意只提供机制, 不提供默认语义。
+type rawPreset struct {
+	Name      string   `json:"name"`
+	Label     string   `json:"label"`
+	Platforms []string `json:"platforms"`
+	Note      string   `json:"note"`
+}
+
 type rawFile struct {
 	Schema    string            `json:"schema"`
 	Version   string            `json:"version"`
 	Roots     map[string]string `json:"roots"`
 	Site      *rawSite          `json:"site"`
 	Platforms []rawPlatform     `json:"platforms"`
+	Presets   []rawPreset       `json:"presets"`
 }
 
 // Mount 已展开的挂载计划。
@@ -93,7 +106,16 @@ type Config struct {
 	Roots      map[string]string
 	Site       SiteInfo
 	Platforms  []*Platform
+	Presets    []*Preset
 	raw        *rawFile
+}
+
+// Preset 命名预设: 对一组平台做批量启停。语义由配置决定, 代码不内置任何分组。
+type Preset struct {
+	Name      string
+	Label     string
+	Note      string
+	Platforms []string
 }
 
 // SiteInfo 站点地址段 (site.primary/mirror/local), 供握手链接与 Origin 白名单消费。
@@ -123,7 +145,58 @@ func Load(path string) (*Config, error) {
 		cfg.Site = SiteInfo{Primary: f.Site.Primary, Mirror: f.Site.Mirror, Local: f.Site.Local}
 	}
 	cfg.resolve(loadRootsOverride())
+	presets, err := parsePresets(cfg, f.Presets)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Presets = presets
 	return cfg, nil
+}
+
+// parsePresets 校验并展开 presets。
+//
+// 未知成员 id 是**配置错误**, 因此直接让 Load 失败: 预设是批量动作, 少一个端却静默跳过,
+// 用户会在"以为全开了"的假象里继续用下去。重复成员去重 (顺序保留), 空名或空成员表报错。
+func parsePresets(cfg *Config, raws []rawPreset) ([]*Preset, error) {
+	out := make([]*Preset, 0, len(raws))
+	seen := map[string]bool{}
+	for i, rp := range raws {
+		name := strings.TrimSpace(rp.Name)
+		if name == "" {
+			return nil, fmt.Errorf("platform: presets[%d]: name is required", i)
+		}
+		if seen[name] {
+			return nil, fmt.Errorf("platform: presets[%d]: duplicate preset name %q", i, name)
+		}
+		seen[name] = true
+		if len(rp.Platforms) == 0 {
+			return nil, fmt.Errorf("platform: preset %q: platforms must not be empty", name)
+		}
+		p := &Preset{Name: name, Label: strings.TrimSpace(rp.Label), Note: strings.TrimSpace(rp.Note)}
+		if p.Label == "" {
+			p.Label = name
+		}
+		memberSeen := map[string]bool{}
+		for _, pid := range rp.Platforms {
+			id := strings.TrimSpace(pid)
+			if id == "" {
+				continue
+			}
+			if cfg.FindPlatform(id) == nil {
+				return nil, fmt.Errorf("platform: preset %q references unknown platform %q", name, id)
+			}
+			if memberSeen[id] {
+				continue
+			}
+			memberSeen[id] = true
+			p.Platforms = append(p.Platforms, id)
+		}
+		if len(p.Platforms) == 0 {
+			return nil, fmt.Errorf("platform: preset %q: platforms has no usable id", name)
+		}
+		out = append(out, p)
+	}
+	return out, nil
 }
 
 // loadRootsOverride 读 ~/.fenjue/state/roots.json (POST /api/roots 的持久化产物)。
@@ -161,9 +234,19 @@ func loadRootsOverride() map[string]string {
 
 // WithRoots 用 override 覆盖 roots 后重新展开全部路径 (enable body {roots?})。
 func (c *Config) WithRoots(override map[string]string) *Config {
-	c2 := &Config{Schema: c.Schema, Version: c.Version, SourcePath: c.SourcePath, raw: c.raw, Site: c.Site}
+	c2 := &Config{Schema: c.Schema, Version: c.Version, SourcePath: c.SourcePath, raw: c.raw, Site: c.Site, Presets: c.Presets}
 	c2.resolve(override)
 	return c2
+}
+
+// FindPreset 按 name 查找预设, 未找到返回 nil。
+func (c *Config) FindPreset(name string) *Preset {
+	for _, p := range c.Presets {
+		if p.Name == name {
+			return p
+		}
+	}
+	return nil
 }
 
 // FindPlatform 按 id 查找平台, 未找到返回 nil。

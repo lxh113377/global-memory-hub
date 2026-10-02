@@ -82,6 +82,18 @@ const zh: Dict = {
   setGithub: "GitHub 仓库",
   fetchErr: "请求失败：",
   unknownErr: "未知错误",
+  presetTitle: "命名预设",
+  presetSub: "预设来自 platforms.json 的 presets 段，成员由你决定，程序不内置分组。",
+  presetMembers: "成员 {n} 端",
+  presetDryRun: "预演",
+  presetEnable: "启用",
+  presetDisable: "关闭",
+  presetApplying: "执行中…",
+  presetEmpty: "未配置预设。在 platforms.json 加一个 presets 段即可启用批量启停。",
+  presetDryRunResult: "预演结果（未写入任何文件）：{n} 个成员将被{action}",
+  presetOk: "{preset} 完成：{ok} 成功 / {fail} 失败",
+  presetFail: "{preset} 有成员失败，逐端结果见下",
+  presetSoftDisable: "批量关闭为软关闭（可一键还原）",
 };
 
 const en: Dict = {
@@ -164,6 +176,18 @@ const en: Dict = {
   setGithub: "GitHub repository",
   fetchErr: "Request failed: ",
   unknownErr: "Unknown error",
+  presetTitle: "Presets",
+  presetSub: "Presets come from the presets section of platforms.json; members are yours to choose, the program hard-codes no grouping.",
+  presetMembers: "{n} ends",
+  presetDryRun: "Dry run",
+  presetEnable: "Enable",
+  presetDisable: "Disable",
+  presetApplying: "Working…",
+  presetEmpty: "No presets configured. Add a presets section to platforms.json to enable batch toggling.",
+  presetDryRunResult: "Dry run (nothing was written): {n} member(s) would be {action}",
+  presetOk: "{preset} done: {ok} ok / {fail} failed",
+  presetFail: "{preset} had failing members, see per-end results below",
+  presetSoftDisable: "Batch disable is a soft close (one-click restore)",
 };
 
 const dicts: Record<Lang, Dict> = { zh, en };
