@@ -37,6 +37,8 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          # 静态链接: linux 产物须能在 alpine/musl 等无 glibc 环境运行 (docker 实测 2026-10-02)
+          CGO_ENABLED: 0
         run: cd agent && go build -trimpath -ldflags "-s -w" -o fenjue-agent-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} ./cmd/fenjue-agent
       - uses: actions/upload-artifact@v4
         with:
