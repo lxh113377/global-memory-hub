@@ -55,4 +55,4 @@ jobs:
       - name: create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "fenjue-agent $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "fenjue-agent $GITHUB_REF_NAME" --generate-notes
