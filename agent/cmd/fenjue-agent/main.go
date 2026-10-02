@@ -60,6 +60,8 @@ func main() {
 		cmdUninstall(args)
 	case "preset":
 		cmdPreset(args)
+	case "export":
+		cmdExport(args)
 	case "version":
 		cmdVersion(args)
 	default:
@@ -79,9 +81,12 @@ usage:
   fenjue-agent disable <id>  [--soft=true] [--platforms <path>]
   fenjue-agent uninstall [--yes] [--hard=true] [--platforms <path>]
   fenjue-agent preset <name> [--action enable|disable] [--dry-run] [--platforms <path>]
+  fenjue-agent export [--include-content] [--format json|markdown] [--platforms <path>]
   fenjue-agent version [--check]
 
 serve hosts the local console on 127.0.0.1 only and prints a handshake link.
+export is read-only: it stats the library, never writes, never listens, needs no token,
+and leaves file bodies out unless --include-content is passed.
 `)
 }
 

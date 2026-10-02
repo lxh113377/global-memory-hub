@@ -89,6 +89,8 @@ fenjue-agent serve    [--port 7799] [--platforms <path>] [--origin <url>]...
 fenjue-agent verify   [--platforms <path>]
 fenjue-agent enable   <platform-id>  [--platforms <path>]
 fenjue-agent disable  <platform-id>  [--soft=true] [--platforms <path>]
+fenjue-agent preset   <preset-name>   [--action enable|disable] [--dry-run] [--platforms <path>]
+fenjue-agent export   [--include-content] [--format json|markdown] [--platforms <path>]
 fenjue-agent version
 ```
 
@@ -98,8 +100,28 @@ fenjue-agent version
 | `--platforms` | Path to the platform definition file. Auto-discovered from the repository root by default. |
 | `--origin` | Extra allowed page origin, repeatable. Point it at the domain where you host the console. |
 | `--soft` | Close mode, default `true` (soft close: keep the link, stop the injection only). |
+| `--dry-run` | `preset` subcommand only: resolve the members and report what would happen, writing nothing. |
+| `--include-content` | `export` subcommand only: metadata is the default; file bodies are emitted only when you ask for them. |
 
 `verify` also works without `--platforms`, which makes it convenient for scheduled health checks.
+
+---
+
+## A read-only exit point for scripts and agents
+
+The `export` subcommand dumps the current state of the unified library as structured data, so a
+script or another AI tool can answer questions like which ends are attached and how many skills
+the library holds:
+
+```bash
+fenjue-agent export --format markdown   # readable straight into an issue or a conversation
+fenjue-agent export | jq '.library.skills'
+```
+
+Its boundaries are deliberately narrow: it is **read-only** (creates, modifies and deletes nothing,
+not even a log line), **neither listens on a port nor touches the network**, **needs no token**, and
+**carries no file bodies by default**. Bodies require an explicit `--include-content`, because dumping
+memory contents into a log is the easiest leak to cause by accident.
 
 ---
 

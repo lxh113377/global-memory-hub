@@ -87,6 +87,8 @@ fenjue-agent serve    [--port 7799] [--platforms <path>] [--origin <url>]...
 fenjue-agent verify   [--platforms <path>]
 fenjue-agent enable   <platform-id>  [--platforms <path>]
 fenjue-agent disable  <platform-id>  [--soft=true] [--platforms <path>]
+fenjue-agent preset   <preset-name>   [--action enable|disable] [--dry-run] [--platforms <path>]
+fenjue-agent export   [--include-content] [--format json|markdown] [--platforms <path>]
 fenjue-agent version
 ```
 
@@ -96,8 +98,24 @@ fenjue-agent version
 | `--platforms` | 平台定义文件路径。默认从仓库根自动定位。 |
 | `--origin` | 追加允许访问的网页来源，可重复。指向你部署控制台的域名。 |
 | `--soft` | 关闭方式，默认 `true`（软关闭，保留链接只停注入）。 |
+| `--dry-run` | 仅 `preset` 子命令：只解析成员并报告将要做什么，不写任何文件。 |
+| `--include-content` | 仅 `export` 子命令：默认只导出元数据；显式带上它才会把文件正文一并输出。 |
 
 `verify` 子命令不带 `--platforms` 也能用，适合放进脚本里做例行体检。
+
+## 给脚本与 Agent 的只读出口
+
+`export` 子命令把统一库的现状导成结构化数据，供脚本或另一个 AI 端读取，
+回答「现在接入了哪些端、统一库里有多少技能」这类问题：
+
+```bash
+fenjue-agent export --format markdown   # 贴进 issue 或对话里直接读
+fenjue-agent export | jq '.library.skills'
+```
+
+它的边界是刻意收窄过的：**只读**（不创建、不修改、不删除，连日志都不写）、
+**不联网也不监听端口**、**不需要令牌**、**默认不含任何文件正文**。
+正文必须显式 `--include-content` —— 把记忆正文打进日志是最容易发生的一次意外泄漏。
 
 ---
 
