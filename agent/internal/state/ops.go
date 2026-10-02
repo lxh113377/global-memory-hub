@@ -13,6 +13,7 @@ import (
 	"fenjue-agent/internal/logx"
 	"fenjue-agent/internal/mount"
 	"fenjue-agent/internal/platform"
+	"fenjue-agent/internal/seed"
 	"fenjue-agent/internal/safeio"
 )
 
@@ -80,6 +81,12 @@ func Enable(cfg *platform.Config, id string) (*OpResult, error) {
 		}
 		changes = append(changes, "created home dir "+p.Home)
 	}
+	// 统一库引导: 目录不存在则建, 空库播种; 已有库零覆盖 (幂等)。
+	seedChanges, err := seed.Bootstrap(cfg.Roots)
+	if err != nil {
+		return nil, fmt.Errorf("platform %s: %w", id, err)
+	}
+	changes = append(changes, seedChanges...)
 	backupID, err := backupFor(p)
 	if err != nil {
 		return nil, err
