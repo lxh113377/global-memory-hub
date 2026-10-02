@@ -12,6 +12,7 @@ import {
   hasToken,
   initTokenFromHash,
   setToken,
+  syncPlatform,
 } from "./lib/api";
 import { I18nContext, initialLang, makeI18n, useT, type Lang } from "./lib/i18n";
 import type {
@@ -67,6 +68,7 @@ function Home({
   results,
   actionErrors,
   onToggle,
+  onSync,
 }: {
   state: AppState | null;
   stateError: string | null;
@@ -74,6 +76,7 @@ function Home({
   results: Record<string, MutationResult>;
   actionErrors: Record<string, string>;
   onToggle: (p: PlatformInfo, next: boolean) => void;
+  onSync: (p: PlatformInfo) => void;
 }) {
   const { t } = useT();
   const platforms = state?.platforms ?? [];
@@ -123,6 +126,7 @@ function Home({
               result={results[p.id] ?? null}
               error={actionErrors[p.id] ?? null}
               onToggle={onToggle}
+              onSync={onSync}
             />
           ))}
         </div>
@@ -212,8 +216,33 @@ function Shell() {
     [refreshState]
   );
 
-  const runBatch = useCallback(
-    async (mode: BatchMode) => {
+  const handleSync = useCallback(
+    async (p: PlatformInfo) => {
+      setBusy((prev) => ({ ...prev, [p.id]: true }));
+      setActionErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[p.id];
+        return copy;
+      });
+      setResults((prev) => {
+        const copy = { ...prev };
+        delete copy[p.id];
+        return copy;
+      });
+      try {
+        const res = await syncPlatform(p.id);
+        setResults((prev) => ({ ...prev, [p.id]: res }));
+      } catch (e) {
+        setActionErrors((prev) => ({ ...prev, [p.id]: describeError(e) }));
+      } finally {
+        setBusy((prev) => ({ ...prev, [p.id]: false }));
+        await refreshState();
+      }
+    },
+    [refreshState]
+  );
+
+  const runBatch = useCallback(    async (mode: BatchMode) => {
       if (!state || batchBusy) return;
       setBatchBusy(mode);
       setBatchMsg(null);
@@ -367,6 +396,7 @@ function Shell() {
             results={results}
             actionErrors={actionErrors}
             onToggle={handleToggle}
+            onSync={handleSync}
           />
         )}
         {route === "skills" && <Skills />}

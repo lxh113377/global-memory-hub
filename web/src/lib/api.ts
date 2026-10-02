@@ -141,6 +141,15 @@ export function runVerify(): Promise<VerifyReport> {
   return request<VerifyReport>("/api/verify", "POST");
 }
 
+/** Manually re-sync mirror mounts of a platform. */
+export function syncPlatform(id: string): Promise<MutationResult> {
+  return request<MutationResult>(
+    `/api/platforms/${encodeURIComponent(id)}/sync`,
+    "POST",
+    {}
+  );
+}
+
 /** Persist custom library roots (takes effect after agent restart). */
 export function setRoots(
   memory: string,
