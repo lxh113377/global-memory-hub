@@ -60,7 +60,7 @@ curl -s http://127.0.0.1:7799/api/health
 ```
 
 ```json
-{ "ok": true, "version": "0.2.2", "os": "windows", "token_required": true }
+{ "ok": true, "version": "0.3.0", "os": "windows", "token_required": true }
 ```
 
 | 字段 | 说明 |

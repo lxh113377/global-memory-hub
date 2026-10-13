@@ -18,7 +18,7 @@ import (
 )
 
 // Version 对外汇报的代理版本。发版时须与 git tag 同步 bump (v0.2.2 曾漂移, docker 轮发现)。
-const Version = "0.2.2"
+const Version = "0.3.0"
 
 // Server 本地伴随程序。
 type Server struct {
