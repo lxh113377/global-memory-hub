@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+（暂无）
+
+## [0.3.0] - 2026-10-14
+
 ### 新增
 
 - 种子包完整性凭据：`pack/manifest.json` 记录每个播种文件的 SHA-256 与字节数。
@@ -74,7 +78,8 @@
 
 ## [0.1.0]
 
-[Unreleased]: https://github.com/lxh113377/global-memory-hub/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/lxh113377/global-memory-hub/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/lxh113377/global-memory-hub/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/lxh113377/global-memory-hub/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/lxh113377/global-memory-hub/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/lxh113377/global-memory-hub/compare/v0.1.0...v0.2.0
