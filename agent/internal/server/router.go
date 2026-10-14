@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"fenjue-agent/internal/platform"
+	"fenjue-agent/internal/safeio"
 	"fenjue-agent/internal/state"
 )
 
@@ -27,6 +28,21 @@ type Server struct {
 	port    int
 	origins map[string]bool
 	dist    fs.FS
+	// roots 是库根路径策略(ADR-001)。nil = DefaultRootPolicy。
+	// 用 setter 而非改 New 的签名: New 有多个调用点, 加参数会把无关改动卷进来。
+	roots *safeio.RootPolicy
+}
+
+// SetRootPolicy 设置库根允许范围。传 nil 恢复默认策略(用户主目录 + ~/.fenjue)。
+// 对应 CLI 的 --allow-root(可重复)。
+func (s *Server) SetRootPolicy(p *safeio.RootPolicy) { s.roots = p }
+
+// rootPolicy 取当前策略, 未设置时惰性回落到默认。
+func (s *Server) rootPolicy() safeio.RootPolicy {
+	if s.roots != nil {
+		return *s.roots
+	}
+	return safeio.DefaultRootPolicy()
 }
 
 // New 创建服务实例。extraOrigins 追加到默认 Origin 白名单。
