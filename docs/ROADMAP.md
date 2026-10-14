@@ -272,8 +272,23 @@ M5 私有侧治理  盘面 B 两问题
 | G13 | 逐端实测结论落盘；不一致项的处置有记录 |
 | G14 | 配置文件内无占位域名残留 |
 | G2 复核（2026-10-14） | 主腿三项已达（Pages `build_type=workflow`、部署 run `37050497366` success、主站 HTTP 200）；**同日镜像腿已建并部署**（`global-memory-hub.pages.dev` 四件全 200，与本地独立构建 SHA-256 逐件全等 4/4）；跨站哈希腿因本机→github.io TCP 443 不通记 `UNVERIFIED` ⇒ **整条判据仍未成立，G2 不得判完成**（缺的是那一半比对，不是部署） |
-| G15–G30 | **本节未覆盖**：§5 只写到 G14，16 项无独立可复算判据 ⇒ 缺口登记为 G32，本轮不凭空补写（没被命令验证过的「验收标准」比缺行更有害） |
+| G15–G28 | **本轮（r181）补齐，逐条带命令与实测读数**。原缺口行「§5 只写到 G14」已被下表取代；G29/G30 仍是 TODO 且**故意不给判据**（尚无产出，无从验证）。逐条读数与四处与 §1 不符的实测差异见 §6 |
 | G31 | `gh release view v0.3.0 --json assets` 含五平台二进制 **与** `SHA256SUMS`（实测 6 件）；`git describe --tags` 与 `router.go` 的 `Version` 同值（实测判据由红转绿：打 tag 前报 `product version drift`，打后报 `VERSION SYNC OK`）；`SHA256SUMS` 每条对得上实际下载字节（windows 产物已独立复算命中）；发布的 exe 自报版本 = 0.3.0 且在沙箱 HOME 下不写任何文件（**已达成**） |
+| G15 | `agent/internal/seed/seed_test.go` 全绿 + 空库 `enable` 后 `verify` 返 2 OK、二次 `enable` 命中零覆盖。**本轮未执行**（Go 工具链不在 PATH，见 §3.10；判据由 CI 承担） |
+| G16 | 全仓 `git grep -nIE '<个人标识正则>'` 应 rc=1 零命中。**正则字面量不入本文件**（写下即成泄漏面），真值在本地不入库文件 `scripts/sanitize.local.json`。**本轮实测 rc=0 且 2 命中，均为良性**：一处是安装说明里的 `C:\Users\<you>\` 占位符，一处是 SKILLS-TIERS.md 里 `C:\Users\*` 这个**规则描述本身**——即第 21 行那个自指陷阱仍在生效，读数时须人工判型，**不得直接把计数当泄漏** |
+| G17 | `python scripts/check_version_sync.py` 须打印 `VERSION SYNC OK` 且 rc=0；`--selftest` 须回 `[GATE:version-selftest-pass] 9 drift cases bite + 1 clean case`。**本轮实测两者均达成** |
+| G18 | `python scripts/verify_seed_manifest.py` 须打印 `SEED MANIFEST OK` 且 rc=0、双向对账（登记未落盘 / 落盘未登记各判差异）。**本轮实测 29 文件 ⇄ 29 条登记全等、rc=0、回 `[GATE:seed-manifest-pass]`**。⚠ 该脚本**只有 `--json`，没有 `--selftest`**（实测 rc=2 usage 报错）；反例腿的真实载体是 Go 侧 `agent/internal/seed/manifest_test.go` |
+| G19 | 九份治理文档 `Test-Path` 全为真（CONTRIBUTING / SECURITY / CHANGELOG / ARCHITECTURE / FAQ / BENCHMARK / API / DEPLOY / SKILLS-TIERS），且 README 双语版双向链入。**本轮实测九份全在** |
+| G20 | `docs/BENCHMARK-2026-10-02.md` 在盘，其 §7.2 双向对账差集为 0。**对账差集本轮未复算**（其读数取自 2026-10-02 收口轮），只核了文件存在 |
+| G21 | `platforms.json` 解析后 `platforms` 长度应为 9 且含 zc/oc/qd。**本轮实测 = 9**（wb tr cx hm zc oc qd mm ds），与私有权威同值 |
+| G22 | `python scripts/check_preset_config.py` rc=0 且每个 preset 成员均可解析；`--selftest` 须回 `[GATE:preset-selftest-pass] 10 rules bite + 2 clean cases`。**本轮实测两者均达成**（9 platforms / 2 presets；对 `all` 预设含 beta 端 mm/ds 给出 NOTE，属提示非失败） |
+| G23 | **维持不做，无判据。** 解锁条件写在 §1 该行：出现「某项目需独立技能集」的真实诉求且能说清项目库与全局库同名技能的优先级语义。在此之前任何验收线都是在猜 |
+| G24 | `fenjue-agent export` 默认不含正文、不联网、不监听端口、不读令牌文件；`--include-content` 才带正文。**本轮未执行**（需构建产物 + 沙箱 HOME） |
+| G25 | `gh release view v0.3.0 --json assets` 须含五平台二进制 **与** `SHA256SUMS`。**本轮实测 6 件齐备**（darwin/linux/windows × amd64/arm64 + SHA256SUMS）。⚠ **必须用绝对路径调用 `gh`**：`%USERPROFILE%\.local\bin\gh` 是 0 字节陈旧 shim，会遮蔽真身并报 "Cannot run a document in the middle of a pipeline" |
+| G26 | `python scripts/bench_scale.py --selftest` 须回 `[GATE:bench-selftest-pass]`（空样本保持 UNVERIFIED，吞吐公式见红）。**本轮实测达成**；规模实测用 `--scale {S1,S2,S3}`，且脚本自述**只碰沙箱，永不触碰真实库** |
+| G27 | `python scripts/check_api_contract.py` rc=0 且回 `API CONTRACT OK`；`--selftest` 须回 `[GATE:api-contract-selftest-pass]`。**本轮实测两者均达成**（router 注册 6 条路由 / 文档覆盖 8 个端点 / 6 棵子树）。⚠ 默认只做静态对账，`live probe` 显示 `SKIPPED`——要探真实状态码须加 `--live` 起沙箱 serve，**SKIPPED 不得折算成通过** |
+| G28 | 对外主站存在文档中心入口且可达各 `docs/*.md`。**本轮实测九份文档在盘**；线上可达性未探（主站跨站链路见 G2 的 UNVERIFIED 说明） |
+| G29 / G30 | **TODO，故意不写判据。** G29 写入口尚无产出、G30 体量治理尚无定案——此时写下「验收标准」就是凭空的门禁，比缺行更有害 |
 
 **全局红线（任何一项破了，本轮不算完成）：**
 
@@ -283,3 +298,41 @@ M5 私有侧治理  盘面 B 两问题
 - 已推送的历史被改写而未走授权。
 
 > 复算：以上判据凡涉及命令的，均在文档中给出可直接执行的形态；凡涉及计数的，给出取值口径与脚本位置。
+
+---
+
+## 6. 判据实测记录（2026-10-14 · r181）
+
+> **本块删除即 G32 回退为未闭环。** 本块是 §5 增行的取证底账：每条读数来自本轮实跑的命令回显，不来自任何计划快照。
+> 纪律同 §1 第 20–21 行：**不重贴被禁字面量**——判据里的个人标识正则只写形态，真值在本地不入库文件 `scripts/sanitize.local.json`。
+
+### 6.1 本轮实跑的判据（解释器一律写绝对路径）
+
+| 判据 | 命令 | 本轮读数 |
+|---|---|---|
+| G4 | `platform_parity.py --private <私有仓根>` | `PARITY OK` rc=0，两侧各 9 端 id 同集 |
+| G4 | `pytest tests/test_platform_parity.py -q` | `1 passed`（须用 managed venv；系统 3.13.12 无 pytest） |
+| G17 | `check_version_sync.py` / `--selftest` | `VERSION SYNC OK` rc=0 / `[GATE:version-selftest-pass] 9 drift + 1 clean` |
+| G18 | `verify_seed_manifest.py` | 29 文件 ⇄ 29 登记全等，rc=0，`[GATE:seed-manifest-pass]` |
+| G22 | `check_preset_config.py` / `--selftest` | rc=0（9 平台 / 2 预设）/ `[GATE:preset-selftest-pass] 10 rules + 2 clean` |
+| G25 | `gh release view v0.3.0 --json assets` | 6 件：5 平台二进制 + `SHA256SUMS` |
+| G26 | `bench_scale.py --selftest` | `[GATE:bench-selftest-pass]` |
+| G27 | `check_api_contract.py` / `--selftest` | `API CONTRACT OK` rc=0 / `[GATE:api-contract-selftest-pass]` |
+| G16 | 全仓个人标识扫描 | rc=0、2 命中，**均良性**（占位符 + 规则描述本身），真实标识 0 |
+| G19/G28 | 九份治理文档 `Test-Path` | 九份全在 |
+| G21 | `platforms.json` 解析 | 9 端：wb tr cx hm zc oc qd mm ds |
+
+### 6.2 四处与 §1 原文不符的实测差异（只声明，**不回改 §1**，回改即制造双源）
+
+1. **G4 腿数。** §1 写「带 **5 条变异腿**自测」；`tests/test_platform_parity.py` 的 `CASES` 实为 **4 条 = 1 正例（`control-unchanged`，期望 `EXIT_OK`）+ 3 变异**（`hub-missing-platform` / `hub-skills-kind-flipped` / `private-missing-junction-record`，均期望 `EXIT_DIFF`）。
+2. **两个脚本没有 `--selftest`。** §1 G4 与 G18 的措辞容易让人写成 `… --selftest`，但 `platform_parity.py`（仅 `--hub/--private/--json`）与 `verify_seed_manifest.py`（仅 `--json`）实测均 `rc=2` usage 报错。前者的变异腿在 **pytest**，后者的反例腿在 **Go `manifest_test.go`**。
+3. **`gh` 被 0 字节 shim 遮蔽。** `gh release view` 直接调用报 `Cannot run a document in the middle of a pipeline`；真身在 `C:\Program Files\GitHub CLI\gh.exe`。任何以 `gh` 开头的判据都必须带绝对路径，否则判据会在**别人的机器上**以不同方式失败。
+4. **`--live` 与 `SKIPPED`。** `check_api_contract.py` 默认只静态对账，实测回显含 `live probe: SKIPPED`；该腿未跑不得记为通过。
+
+### 6.3 本轮未执行（不冒充已核）
+
+G15 / G18 的 Go 腿、G20 的 §7.2 对账差集、G24 的 `export` 冒烟、G28 的线上可达性——本轮均**未执行**，§5 对应行已逐条标注。前四者依赖 Go 工具链（本机不在 PATH，见 §3.10）或沙箱构建，第五项受 G2 的跨站 `UNVERIFIED` 阻断。
+
+### 6.4 本轮未改动的东西
+
+§1 全部 G 行、§0 读法、§2 优先级排序、§3 全部小节、§4 里程碑依赖图**均未改写**。本轮只做两件事：把 §5 的「G15–G30 本节未覆盖」缺口行换成实测行、补本节。
