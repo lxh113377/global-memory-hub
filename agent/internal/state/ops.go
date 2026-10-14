@@ -61,9 +61,12 @@ var linkOps = safeio.LinkOps{
 
 // Enable 启用平台: 备份 -> 建链/同步 -> 注入激活标记块。
 // 已 OK 的挂载点 no-op (幂等, 绝不破坏已有链接)。
-func Enable(cfg *platform.Config, id string) (*OpResult, error) {
+func Enable(cfg *platform.Config, id string) (res *OpResult, err error) {
 	opMu.Lock()
 	defer opMu.Unlock()
+	// ADR-001: 审计覆盖本函数**每一个**返回点。用具名返回值 + defer,
+	// 而不是逐个 return 前插一行 —— 后者漏一条就是审计缺口, 而缺口不会报错。
+	defer func() { logx.Audit("enable", id, err == nil, auditDetail(res, err)) }()
 	p := cfg.FindPlatform(id)
 	if p == nil {
 		return nil, &NotFoundError{Platform: id}
@@ -174,9 +177,13 @@ func enableLink(p *platform.Platform, m platform.Mount, changes *[]string) error
 }
 
 // Disable 停用平台: soft=true 摘链+注入改停用短壳; soft=false 摘链+删段。
-func Disable(cfg *platform.Config, id string, soft bool) (*OpResult, error) {
+func Disable(cfg *platform.Config, id string, soft bool) (res *OpResult, err error) {
 	opMu.Lock()
 	defer opMu.Unlock()
+	// 同 Enable: 审计覆盖每一个返回点, 含 "nothing to disable" 这种早退。
+	defer func() {
+		logx.Audit("disable", id, err == nil, fmt.Sprintf("soft=%t %s", soft, auditDetail(res, err)))
+	}()
 	p := cfg.FindPlatform(id)
 	if p == nil {
 		return nil, &NotFoundError{Platform: id}
@@ -353,3 +360,16 @@ func writeMirrorSynced(id, from, to string) error {
 }
 
 func clearMirrorOff(id string) { os.Remove(mirrorOffPath(id)) }
+
+// auditDetail 把操作结果压成一行放进审计的 detail 字段(ADR-001)。
+// 只放可 grep 的骨架, 不把 changes 全文塞进日志 —— 那是 agent.log 的活,
+// 审计行要能被一眼看尽。
+func auditDetail(res *OpResult, err error) string {
+	if err != nil {
+		return "error: " + err.Error()
+	}
+	if res == nil {
+		return "no result"
+	}
+	return fmt.Sprintf("backup=%s changes=%d", res.BackupID, len(res.Changes))
+}

@@ -38,7 +38,14 @@ type cliFlags struct {
 	platforms *string
 	origins   originList
 	soft      *bool
+	allowRoot rootList
 }
+
+// rootList 收集可重复的 --allow-root 取值(ADR-001 的显式放宽口)。
+type rootList []string
+
+func (r *rootList) String() string     { return strings.Join(*r, ",") }
+func (r *rootList) Set(v string) error { *r = append(*r, v); return nil }
 
 func main() {
 	sub := "serve"
@@ -96,6 +103,7 @@ func newFlags(sub string) (*flag.FlagSet, *cliFlags) {
 	cf.port = set.Int("port", 7799, "HTTP port (listens on 127.0.0.1 only)")
 	cf.platforms = set.String("platforms", "", "path to platforms.json (default: auto-discover repo root)")
 	set.Var(&cf.origins, "origin", "extra allowed Origin, repeatable")
+	set.Var(&cf.allowRoot, "allow-root", "extra allowed library-root prefix, repeatable (ADR-001; default: home dir + ~/.fenjue)")
 	cf.soft = set.Bool("soft", true, "disable: soft=true keeps marker block as disabled shell")
 	return set, cf
 }
@@ -171,6 +179,12 @@ func cmdServe(args []string) {
 		os.Exit(1)
 	}
 	srv := server.New(cfg, token, *cf.port, cf.origins, dist)
+	// ADR-001: 库根允许范围。默认 = 用户主目录 + ~/.fenjue; --allow-root 可显式放宽。
+	// 只放宽不收紧 —— 收紧会让既有用法突然 400, 而"少写点地方"不是用户要的效果。
+	if len(cf.allowRoot) > 0 {
+		p := safeio.DefaultRootPolicy().WithRoots(cf.allowRoot...)
+		srv.SetRootPolicy(&p)
+	}
 
 	addr := fmt.Sprintf("127.0.0.1:%d", *cf.port)
 	fmt.Printf("fenjue-agent %s (%s/%s)\n", version, runtime.GOOS, runtime.GOARCH)
