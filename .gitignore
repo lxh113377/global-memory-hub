@@ -12,6 +12,7 @@ __pycache__/
 
 # Local state
 .fenjue/
+.wrangler/
 _trash/
 _temp/
 _bak/

@@ -1,4 +1,4 @@
-# 焚诀 Global — 未完成任务与后续规划
+﻿# 焚诀 Global — 未完成任务与后续规划
 
 > 生成时刻：2026-10-01（本轮会话）
 > 口径：全部数字来自**磁盘实测**（`git` / 文件系统 / 程序输出），不来自任何计划快照或上轮摘要。
@@ -67,8 +67,8 @@
 | G31 | 发版 v0.3.0：把 10-03 批次（bench / 文档中心 / presets / export / SHA256SUMS）交付到资产面 | 锋 | **DONE** | G10、G17 | 2026-10-14 已发：commit `a0d7393` 把 `Version` 常量 0.2.2→0.3.0 并落 CHANGELOG，随后 annotated tag `v0.3.0` 与 commit 同一次 push 推出（不留 CI 红窗）。release run 38473486756 六 job 全 success（5 平台 + release 合并步）。资产面实测 **6 件** = 五平台二进制 + `SHA256SUMS`(463 B)，且 `gh release list` 的 Latest 指针已到 v0.3.0 |
 | G32 | §5 验收判据覆盖面与 §1 条目表失配 | 锋 | TODO | — | 2026-10-14 复核发现：§5 表格只写到 G14，而 §1 已列到 G30（16 项无独立可复算判据）。本文件的口径是「逐任务写可验证判据」，覆盖面不足即为该口径未兑现。**本轮只登记不补写**：16 行判据需逐条与 §1 的完成证据对齐，凭空补写会造出一批没被任何命令验证过的「验收标准」，比缺行更糟 |
 | G33 | 公开仓的**提交元数据面**从未进过敏感面扫描（本轮实测新发现） | 人（已拍板）／锋（已落地） | **DONE（走 ① 只改未来）** | — | 2026-10-14 轮180 实测：本仓 `visibility=PUBLIC`（`gh repo view --json visibility` → `PUBLIC`，`isPrivate=false`），而 `git log --format='%ae\|%ce' \| sort -u` 得**唯一一行** `<11 位数字>@qq.com`，43/43 个提交的 author 与 committer 都是它——该邮箱本地部分的前 5 位与用户其它标识同源。此前登记的「发布前对全历史（49 个 blob）扫描…全 0」取数面是**文件 blob**，不含 commit 对象，所以那句在它自己的口径里成立、在「这仓对外暴露了哪些身份」这个问题上并不成立。**三条出路，代价不同，须由人拍板**：① 只改未来 —— GitHub 账号开邮箱保密 + 本仓改用 `users.noreply` 身份，历史不动（不碰共享状态，但历史那 43 个 commit 仍公开可见该邮箱）；② `git filter-repo` 重写全历史 + 强推 —— 能真正抹掉，但本仓已有公开 Release（v0.1.0–v0.3.0）与已发布 tag，重写会让资产链接与外部 fork 的历史断裂，属不可逆的共享状态动作；③ 接受现状 —— 判定「一个 QQ 邮箱本身不构成需处置的暴露」。**本仓规则：强推与历史重写一律不代办**，故 ② 在未获明确指令前不执行。复算：`git log --format='%ae\|%ce' \| sort -u \| wc -l`（=1）与 `git log --format='%ae' \| grep -c <前5位>`（=43） **2026-10-14 轮182 落地（老大选 ①「只改未来」，明确放弃 ②）**：② 会断已发布的 v0.1.0–v0.3.0 资产链与外部 fork 历史，属不可逆共享状态动作。两条动作各有回读证据 —— (a) 本仓 `git config --local user.email` 改为 `<user-id>+<login>@users.noreply.github.com`，`git var GIT_AUTHOR_IDENT` 回读命中；**全局配置未动**：另三仓（焚诀 / global_memory / global_skills）经 `gh api repos/<slug> --jq .visibility` 实测均 `private`，不在暴露面上，扩域无收益只有副作用。(b) 账号侧 `PATCH /user/email/visibility`（端点名按官方文档取**单数**；我第一次按复数试时被 Git Bash 把 URL 当文件系统路径改写而报错，**那不构成复数端点不存在的证据**）把该邮箱 profile 可见性 public → private，`gh api user/emails` 读回 `visibility=private`，且同一次读回**列出了那条 noreply 别名** ⇒ 我按 id+login 推出的形式由账号面自证，非推断。**仍未做（有意）**：账号级「Keep my email addresses private / block pushes that expose my email」无 REST 端点可开；且该开关一旦打开会拒掉携带真实邮箱的命令行推送，而本机另三仓现在正是用真实邮箱提交 ⇒ 开了就断它们推送，属跨仓副作用，未经拍板不代开。历史 43 个提交里的邮箱按拍板保持不动。 |
-| G34 | 镜像站对**任意不存在路径**返 `200 + text/html + 根 index.html` ⇒「URL 返 200」在本仓**不是**存在性证明 | 锋 | **TODO** | G2 | **2026-10-14 实测**：`curl` 打 `/console/assets/NOPE-xyz.js`、`/totally/bogus/path`、以及一个真实存在但本地已换 hash 的旧路径，**三者一律返 `200|13741|text/html`**——13741 B 正是根 `site/index.html` 的体积。**后果**：`§5` 里 G2 镜像腿的「四件全 200」子判据在这站**是空判据**（不存在的文件也 200），真正成立的是**与本地独立构建逐件 SHA-256 全等**那一腿；G28 的「点得到」同理。**处置方向（三选一，待拍板）**：① 加 `_routes.json` 或 404 页让静态 404 回真 404（但会牺牲 SPA 深链）；② 保留兜底、但**判据一律改用字节比对 + content-type**，不再用 200；③ 只在 CI 加一条「不存在的路径必须非 200」的守卫。**本条不是新部署事故，是一条判据可信度问题**——它使此前所有「站点正常」的 200 证据强度下降 | |
-| G35 | §3.10 第 1 条「Go 工具链不在 PATH」已被实测否证（文档漂移） | 锋 | **TODO** | — | **2026-10-14 实测**：`where go` → `C:\Program Files\Go\bin\go.exe`，`go version` = `go1.27.0 windows/amd64`，**在 PATH 上**，且 `go test -count=1 ./...` 与 `go vet ./...` 直接可跑（rc=0）。§3.10 写「不在 PATH」会让人以为 Go 腿只能靠 CI——本轮据此把 G15/G18/G22 判为「未执行」，实为**误判**。附带两处相关漂移：`agent/build.sh` 的兜底路径表里**没有** Windows 上真实存在的 `/c/Program Files/Go/bin/go.exe` 之外的 `C:\Program Files\Go\bin\go.exe` 字面形态；§3.10 第 2 条（git 行尾转换）本轮未复验。**判据**：`where go` 与 `go version` 双通道回读，或直接删掉该条——它已从「环境事实」退化为误导 | |
+| G34 | 镜像站对**任意不存在路径**返 `200 + text/html + 根 index.html` ⇒「URL 返 200」在本仓**不是**存在性证明 | 锋 | **DONE（部署侧 + 判据侧，2026-10-14 r183）** | — | **实测症状**：`curl` 打 `/console/assets/NOPE-xyz.js`、`/totally/bogus/path`、`/_routes.json` 一律返 `200|13741|text/html`（13741 B == 根 `site/index.html` 体积）。**处置（两条都做）**：① 部署侧 —— 新增 `site/_routes.json`（`not_found_handling: "404-page"`）+ `site/404.html`，重投镜像后不存在的路径回**真 404**；② 判据侧 —— G2 / G28 的可达性判据改为**比字节 + 看 content-type**，不再用 200。**为什么敢关掉 SPA 兜底**：`web/src` 全量 grep `pushState|history\.` 命中 **0** 次且 `vite.config.ts` 为 `base: "./"` ⇒ 控制台是纯 hash 路由，不依赖 history-API 深链 ⇒ 零功能代价。**落地中撞到的真坑**：`not_found_handling: "404-page"` **必须同时存在 `404.html` 才生效**；只投 `_routes.json` 时 Cloudflare **静默忽略**该配置，行为与修复前逐字节相同（仍是 `200|13741`），无报错无警告——是探不存在的路径才把它抓住的。**验收（重投前后同组探针，只允许一个变化）**：不存在路径 `200→404`；`/` 与 `/console/` 仍 200；`index-BX4eCaU5.js` 仍 `200\|177487\|application/javascript`；`index-B-NFB106.css` 仍 `200\|20566\|text/css`。**顺带纠正 DEPLOY.md 的漂移**：CF 项目实测 `Git Provider = No`，镜像**非** Git-connected，push 不会自动重部署，原文「Connect to Git / 自动重部署」从未成立，已改写为手动 `wrangler pages deploy` | |
+| G35 | §3.10 第 1 条「Go 工具链不在 PATH」已被实测否证（文档漂移）；另 DEPLOY.md 的 CF 段亦为漂移 | 锋 | **部分 DONE** | — | **Go 侧否证**：`where go` → `C:\Program Files\Go\bin\go.exe`，`go version` = `go1.27.0 windows/amd64`，**在 PATH 上**，`go test -count=1 ./...` 与 `go vet ./...` 直接可跑（rc=0）。§3.10 写「不在 PATH」会让人以为 Go 腿只能靠 CI——本轮据此把 G15/G18/G22 误判为「未执行」，实为**误判**。**DEPLOY.md 侧已在 G34 同轮改写**（`Git Provider = No`）。**仍未做**：§3.10 本体那两条文字**仍写着旧口径**，本轮只在 G35 与 §6.5 声明否证、未回改原行——否则 §3 会与 §5/§6 长期双源。解锁动作：删掉第 1 条或按 `where go` 改写；§3.10 第 2 条（git 行尾转换）本轮未复验 | |
 
 #### §1.1 技能分级的依据（G7 为何必须分级）
 
@@ -273,7 +273,7 @@ M5 私有侧治理  盘面 B 两问题
 |---|---|
 | G0 | `git checkout-index -a` 导出面内构建 rc=0；删占位后 rc=1；还原后 rc=0（**已达成**） |
 | G1 | `git remote -v` 非空；首次推送后远端可 `git ls-remote` 取到同一提交；Release 页存在且有资产 |
-| G2 | 两个域名均 HTTP 200；两侧产物逐文件哈希全等；任一侧不可达时判 `UNVERIFIED`，不得判通过。⚠ **2026-10-14 补（G34）**：本站在镜像面上对不存在的路径也返 `200`，故「HTTP 200」这一腿**在镜像侧是空判据**，真正成立的是**与本地独立构建逐件 SHA-256 全等**。要探「资源存在」须比字节或看 `content-type`，不能只看状态码 |
+| G2 | 两个域名均 HTTP 200；两侧产物逐文件哈希全等；任一侧不可达时判 `UNVERIFIED`，不得判通过。⚠ **2026-10-14 两处补（G34）**：① 镜像面**必须额外探一个保证不存在的路径并要求非 200**（如 `/totally/bogus/path`），否则旧的 200 证据不可信——现已由 `site/_routes.json` + `site/404.html` 提供真 404；② 资源「存在」一律以**字节比对 + content-type** 判定，不看状态码。**2026-10-14 r183 实测**：不存在路径 `200|13741` → `404|143`；`/` 200\|13741、`/console/` 200\|465、`index-BX4eCaU5.js` 200\|177487\|application/javascript、`index-B-NFB106.css` 200\|20566\|text/css **均未变**。产物件面由「四件」增为**六件**（新增 `_routes.json`、`404.html`），组装口径见 `DEPLOY.md` |
 | G3 | 仓库根存在中英两份 README；三平台安装说明均存在；全仓对个人绝对路径模式扫描**零命中** |
 | G4 | 一致性腿正反两向各跑一次（注入差异见红、恢复见绿）；两仓各跑 rc=0 |
 | G5 | 权限收紧后，本用户可读、另一用户不可读，两侧均实测 |
@@ -316,64 +316,13 @@ M5 私有侧治理  盘面 B 两问题
 
 ---
 
-## 6. 判据实测记录（2026-10-14 · r181 建 / r182 续）
+## 6. 判据实测记录（已下沉）
 
-> **本块删除即 G32 回退为未闭环。** 本块是 §5 增行的取证底账：每条读数来自本轮实跑的命令回显，不来自任何计划快照。
-> 纪律同 §1 第 20–21 行：**不重贴被禁字面量**——判据里的个人标识正则只写形态，真值在本地不入库文件 `scripts/sanitize.local.json`。
-
-### 6.1 本轮实跑的判据（解释器一律写绝对路径）
-
-| 判据 | 命令 | 本轮读数 |
-|---|---|---|
-| G4 | `platform_parity.py --private <私有仓根>` | `PARITY OK` rc=0，两侧各 9 端 id 同集 |
-| G4 | `pytest tests/test_platform_parity.py -q` | `1 passed`（须用 managed venv；系统 3.13.12 无 pytest） |
-| G17 | `check_version_sync.py` / `--selftest` | `VERSION SYNC OK` rc=0 / `[GATE:version-selftest-pass] 9 drift + 1 clean` |
-| G18 | `verify_seed_manifest.py` | 29 文件 ⇄ 29 登记全等，rc=0，`[GATE:seed-manifest-pass]` |
-| G22 | `check_preset_config.py` / `--selftest` | rc=0（9 平台 / 2 预设）/ `[GATE:preset-selftest-pass] 10 rules + 2 clean` |
-| G25 | `gh release view v0.3.0 --json assets` | 6 件：5 平台二进制 + `SHA256SUMS` |
-| G26 | `bench_scale.py --selftest` | `[GATE:bench-selftest-pass]` |
-| G27 | `check_api_contract.py` / `--selftest` | `API CONTRACT OK` rc=0 / `[GATE:api-contract-selftest-pass]` |
-| G16 | 全仓个人标识扫描 | rc=0、2 命中，**均良性**（占位符 + 规则描述本身），真实标识 0 |
-| G19/G28 | 九份治理文档 `Test-Path` | 九份全在 |
-| G21 | `platforms.json` 解析 | 9 端：wb tr cx hm zc oc qd mm ds |
-
-### 6.2 四处与 §1 原文不符的实测差异（只声明，**不回改 §1**，回改即制造双源）
-
-1. **G4 腿数。** §1 写「带 **5 条变异腿**自测」；`tests/test_platform_parity.py` 的 `CASES` 实为 **4 条 = 1 正例（`control-unchanged`，期望 `EXIT_OK`）+ 3 变异**（`hub-missing-platform` / `hub-skills-kind-flipped` / `private-missing-junction-record`，均期望 `EXIT_DIFF`）。
-2. **两个脚本没有 `--selftest`。** §1 G4 与 G18 的措辞容易让人写成 `… --selftest`，但 `platform_parity.py`（仅 `--hub/--private/--json`）与 `verify_seed_manifest.py`（仅 `--json`）实测均 `rc=2` usage 报错。前者的变异腿在 **pytest**，后者的反例腿在 **Go `manifest_test.go`**。
-3. **`gh` 被 0 字节 shim 遮蔽。** `gh release view` 直接调用报 `Cannot run a document in the middle of a pipeline`；真身在 `C:\Program Files\GitHub CLI\gh.exe`。任何以 `gh` 开头的判据都必须带绝对路径，否则判据会在**别人的机器上**以不同方式失败。
-4. **`--live` 与 `SKIPPED`。** `check_api_contract.py` 默认只静态对账，实测回显含 `live probe: SKIPPED`；该腿未跑不得记为通过。
-
-### 6.3 第一轮未执行项（已于 §6.5 全部关闭，此段保留作时序）
-
-> **本段描述的是 r181 当时的取数状态，已被 §6.5 取代——保留是为了留痕，不是现状。**
-
-G15 / G18 的 Go 腿、G20 的 §7.2 对账、G24 的 `export` 冒烟、G28 的线上可达性，在 r181 均**未执行**。当时归因写的是「依赖 Go 工具链（本机不在 PATH，见 §3.10）或沙箱构建」——**其中「Go 不在 PATH」这个归因本身是错的**，见 §6.5 否证第 1 条：Go 一直在 PATH 上，这五项从来就能跑，是我没跑。
-
-### 6.4 本轮未改动的东西
-
-§1 全部 G 行、§0 读法、§2 优先级排序、§3 全部小节、§4 里程碑依赖图**均未改写**。本轮只做两件事：把 §5 的「G15–G30 本节未覆盖」缺口行换成实测行、补本节。
-
-### 6.5 第二轮取证（2026-10-14 · r182）：补齐五项「未执行」，并否证三条旧断言
-
-**补齐的（§5 对应行已逐条回填读数）**
-
-| 项 | 实测 |
-|---|---|
-| G15 Go 腿 | `go test -count=1 -v ./internal/seed/` → 5 条 bootstrap 腿全 PASS；`go vet ./...` rc=0 |
-| G18 Go 腿 | 同命令 7 条 `TestVerifyPack*` 全 PASS ⇒ **与 §1「1 正例 + 5 篡改反例 + 1 端到端」逐条对上** |
-| G22 Go 腿 | `go test -count=1 -v ./internal/state/` → 6 条 `TestApplyPreset*` 全 PASS |
-| G20 | §7.2 逐项对账表 11 行齐全，每行带落地提交 + 可复算命令 |
-| G24 | 打在 **v0.3.0 下载产物**上 rc=0；默认 2,794 B vs `--include-content` 199,032 B（差 196,238 B，含 `MEMORY.md`）；毒令牌哨兵未被读；唯一落盘副作用是 0 字节日志 |
-| G28 | 主站 20 链接，含 `#docs` 与七份文档的仓库直链 |
-| G2 跨站腿 | **仍 `UNVERIFIED`**：`Test-NetConnection` 到 `lxh113377.github.io:443` = False（DNS 正常解析到 185.199.110.153，TCP 建连失败），`curl` exit 28 / http 000。镜像腿四件全 200 且与本地 `web/dist` 逐字节同源（`index-BX4eCaU5.js` 177,487 B、`index-B-NFB106.css` 20,566 B） |
-
-**被实测否证的三条（只声明，不回改原行）**
-
-1. **§3.10 第 1 条「Go 工具链不在 PATH」为假** —— `where go` → `C:\Program Files\Go\bin\go.exe`，go1.27.0，在 PATH 上。已登记 G35。本轮我据这条把 G15/G18/G22 误判为「未执行」，实为误判。
-2. **本地 exe 没有 `export` 子命令** —— 真因是**本地 exe 陈旧**（早于 `export.go` 加入），不是功能缺失。同一命令打在 v0.3.0 产物上正常工作。
-3. **`agent/cmd/fenjue-agent/dist` 与线上 `web/dist` 资产 hash 不同** —— 曾疑为「二进制内嵌的是陈旧前端」，落笔前用 `git check-ignore` + `git ls-files` + exe 字节串探针否证：`dist/*` 由 `.gitignore:4` 忽略、`fenjue-agent.exe` 由 `agent/.gitignore:1` 忽略，二者都是**未入库的本机构建产物**，各自与自身构建时刻自洽，**不构成对外交付缺陷**。
-
-> 第 2、3 条是本轮 §5 硬前置（「判据落笔前必须实跑」）的**第一次实战**：两条「发现」都是在准备落笔时被对照实验按死的，其中第 3 条已经跑完了取数、正准备写进文档，被 `git check-ignore` 反证。**没这道闸，本节会多出两条不存在的缺陷。**
-
-**新登记** G34（镜像站 200 兜底使 HTTP-200 成为空判据）、G35（§3.10 文档漂移）。
+> **正文在 [ROADMAP.part1.md](ROADMAP.part1.md)**（本文件 §6 的展开卷，append-only 的过程证据）。
+> 下沉原因 = G30 文档体量治理：本轮三改后本文件曾达 60 KB，而 §6 属「查现状时不必读」的过程面。
+>
+> - **要看当前状态** → 读本文件 §1（任务台账）/ §2（优先级）/ §5（验收判据）。
+> - **要看取证过程、被否证的旧断言、投放前后对照** → 读 [part1 §6.2](ROADMAP.part1.md) / §6.5 / §6.6。
+> - §6.5 记着三处**已被实测否证**的旧断言（Go 不在 PATH / 本地 exe 缺 export / 内嵌 dist 陈旧），
+>   §6.6 记着一次**静默失败**的投放（只加 _routes.json 时 Cloudflare 无声忽略）。
+  这些断言散落在 §1 / §3 / DEPLOY.md 正文里，本轮只声明不回改——**引用它们时必须连否证结论一起读**。
