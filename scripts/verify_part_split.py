@@ -210,6 +210,9 @@ def main() -> int:
                 print(f"  {gid} -> {', '.join(where)}")
         if rep["missing"]:
             print(f"缺失编号: {', '.join(rep['missing'])}")
+            print("  若你**刚新增**了 G 编号，这是预期内的红 —— 请把 --expect-range 的上界一并调大；")
+            print("  边界刻意要显式重声明（见脚本头部「设计上的三条硬约束」第 1 条）。")
+            print("  若你并**没有**新增，那是真的丢了一行，且它不会报错 —— 这正是本判据存在的理由。")
         print(f"[GATE:part-split-{'pass' if rep['ok'] else 'fail'}]"
               + (" 编号完整且唯一；未校验内容是否被改写（见脚本头部声明）" if rep["ok"] else " 详见上方"))
 
