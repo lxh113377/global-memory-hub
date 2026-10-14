@@ -55,7 +55,7 @@ if filepath.Clean(exp) == "" || strings.ContainsAny(filepath.Clean(exp), "<>") {
 新增 `safeio.RootPolicy`（`agent/internal/safeio/rootpolicy.go`）：
 
 - 默认允许集 = **用户主目录 ∪ `~/.fenjue`**，即「只许写用户家目录之内」。
-- 判定是**前缀包含**，且必须防前缀混淆：`C:\Users\foo` **不得**放行 `C:\Users\foobar`。
+- 判定是**前缀包含**，且必须防前缀混淆：`C:\Users\<you>` **不得**放行 `C:\Users\<you>-evil`。
   实现用「相等 或 以 prefix + 分隔符 开头」，不用裸 `strings.HasPrefix`。
 - Windows 下比较**大小写不敏感**。
 - 判定前先 `Clean`，否则 `…/foo/../bar` 能绕过字面比较。
