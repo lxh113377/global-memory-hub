@@ -107,6 +107,16 @@ jobs:
         run: python3 scripts/check_preset_config.py --selftest
       - name: preset config (members must resolve to existing platforms, no duplicates)
         run: python3 scripts/check_preset_config.py
+      # 分卷一致性。r187 让 G0 同时存在于主壳与 part2, 命令成功、行数对、字节接近,
+      # 只有对账抓得住 —— 这条就是把那套对账固化成阻断腿。
+      - name: part split selftest (duplicate / missing / header-as-data / mention-vs-owning must all bite)
+        run: python3 scripts/verify_part_split.py --selftest
+      # --owner 声明哪个 part **持有** G 编号（只是提到的不算）。
+      # --expect-range 是**刻意显式**的边界: 新增 G 编号后请把上界一并调大,
+      # CI 会先红一次提醒你。这不是维护负担, 是「边界必须被重新声明」这条纪律的落地 ——
+      # 见 scripts/verify_part_split.py 头部「设计上的三条硬约束」。
+      - name: part split (G numbers complete and unique across shell and parts)
+        run: python3 scripts/verify_part_split.py --owner ROADMAP.part2.md --expect-range 0-35
 
   # API 实测腿 (advisory)。需要 go build 并在回环起一个沙箱 serve, 放共享 runner 上做
   # 文档承诺的状态码核对; 失败多半是环境问题, 不该把构建判红, 故与 bench 同样 advisory。
