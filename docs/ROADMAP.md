@@ -68,7 +68,7 @@
 | G32 | §5 验收判据覆盖面与 §1 条目表失配 | 锋 | TODO | — | 2026-10-14 复核发现：§5 表格只写到 G14，而 §1 已列到 G30（16 项无独立可复算判据）。本文件的口径是「逐任务写可验证判据」，覆盖面不足即为该口径未兑现。**本轮只登记不补写**：16 行判据需逐条与 §1 的完成证据对齐，凭空补写会造出一批没被任何命令验证过的「验收标准」，比缺行更糟 |
 | G33 | 公开仓的**提交元数据面**从未进过敏感面扫描（本轮实测新发现） | 人（已拍板）／锋（已落地） | **DONE（走 ① 只改未来）** | — | 2026-10-14 轮180 实测：本仓 `visibility=PUBLIC`（`gh repo view --json visibility` → `PUBLIC`，`isPrivate=false`），而 `git log --format='%ae\|%ce' \| sort -u` 得**唯一一行** `<11 位数字>@qq.com`，43/43 个提交的 author 与 committer 都是它——该邮箱本地部分的前 5 位与用户其它标识同源。此前登记的「发布前对全历史（49 个 blob）扫描…全 0」取数面是**文件 blob**，不含 commit 对象，所以那句在它自己的口径里成立、在「这仓对外暴露了哪些身份」这个问题上并不成立。**三条出路，代价不同，须由人拍板**：① 只改未来 —— GitHub 账号开邮箱保密 + 本仓改用 `users.noreply` 身份，历史不动（不碰共享状态，但历史那 43 个 commit 仍公开可见该邮箱）；② `git filter-repo` 重写全历史 + 强推 —— 能真正抹掉，但本仓已有公开 Release（v0.1.0–v0.3.0）与已发布 tag，重写会让资产链接与外部 fork 的历史断裂，属不可逆的共享状态动作；③ 接受现状 —— 判定「一个 QQ 邮箱本身不构成需处置的暴露」。**本仓规则：强推与历史重写一律不代办**，故 ② 在未获明确指令前不执行。复算：`git log --format='%ae\|%ce' \| sort -u \| wc -l`（=1）与 `git log --format='%ae' \| grep -c <前5位>`（=43） **2026-10-14 轮182 落地（老大选 ①「只改未来」，明确放弃 ②）**：② 会断已发布的 v0.1.0–v0.3.0 资产链与外部 fork 历史，属不可逆共享状态动作。两条动作各有回读证据 —— (a) 本仓 `git config --local user.email` 改为 `<user-id>+<login>@users.noreply.github.com`，`git var GIT_AUTHOR_IDENT` 回读命中；**全局配置未动**：另三仓（焚诀 / global_memory / global_skills）经 `gh api repos/<slug> --jq .visibility` 实测均 `private`，不在暴露面上，扩域无收益只有副作用。(b) 账号侧 `PATCH /user/email/visibility`（端点名按官方文档取**单数**；我第一次按复数试时被 Git Bash 把 URL 当文件系统路径改写而报错，**那不构成复数端点不存在的证据**）把该邮箱 profile 可见性 public → private，`gh api user/emails` 读回 `visibility=private`，且同一次读回**列出了那条 noreply 别名** ⇒ 我按 id+login 推出的形式由账号面自证，非推断。**仍未做（有意）**：账号级「Keep my email addresses private / block pushes that expose my email」无 REST 端点可开；且该开关一旦打开会拒掉携带真实邮箱的命令行推送，而本机另三仓现在正是用真实邮箱提交 ⇒ 开了就断它们推送，属跨仓副作用，未经拍板不代开。历史 43 个提交里的邮箱按拍板保持不动。 |
 | G34 | 镜像站对**任意不存在路径**返 `200 + text/html + 根 index.html` ⇒「URL 返 200」在本仓**不是**存在性证明 | 锋 | **DONE（部署侧 + 判据侧，2026-10-14 r183）** | — | **实测症状**：`curl` 打 `/console/assets/NOPE-xyz.js`、`/totally/bogus/path`、`/_routes.json` 一律返 `200|13741|text/html`（13741 B == 根 `site/index.html` 体积）。**处置（两条都做）**：① 部署侧 —— 新增 `site/_routes.json`（`not_found_handling: "404-page"`）+ `site/404.html`，重投镜像后不存在的路径回**真 404**；② 判据侧 —— G2 / G28 的可达性判据改为**比字节 + 看 content-type**，不再用 200。**为什么敢关掉 SPA 兜底**：`web/src` 全量 grep `pushState|history\.` 命中 **0** 次且 `vite.config.ts` 为 `base: "./"` ⇒ 控制台是纯 hash 路由，不依赖 history-API 深链 ⇒ 零功能代价。**落地中撞到的真坑**：`not_found_handling: "404-page"` **必须同时存在 `404.html` 才生效**；只投 `_routes.json` 时 Cloudflare **静默忽略**该配置，行为与修复前逐字节相同（仍是 `200|13741`），无报错无警告——是探不存在的路径才把它抓住的。**验收（重投前后同组探针，只允许一个变化）**：不存在路径 `200→404`；`/` 与 `/console/` 仍 200；`index-BX4eCaU5.js` 仍 `200\|177487\|application/javascript`；`index-B-NFB106.css` 仍 `200\|20566\|text/css`。**顺带纠正 DEPLOY.md 的漂移**：CF 项目实测 `Git Provider = No`，镜像**非** Git-connected，push 不会自动重部署，原文「Connect to Git / 自动重部署」从未成立，已改写为手动 `wrangler pages deploy` | |
-| G35 | §3.10 第 1 条「Go 工具链不在 PATH」已被实测否证（文档漂移）；另 DEPLOY.md 的 CF 段亦为漂移 | 锋 | **部分 DONE** | — | **Go 侧否证**：`where go` → `C:\Program Files\Go\bin\go.exe`，`go version` = `go1.27.0 windows/amd64`，**在 PATH 上**，`go test -count=1 ./...` 与 `go vet ./...` 直接可跑（rc=0）。§3.10 写「不在 PATH」会让人以为 Go 腿只能靠 CI——本轮据此把 G15/G18/G22 误判为「未执行」，实为**误判**。**DEPLOY.md 侧已在 G34 同轮改写**（`Git Provider = No`）。**仍未做**：§3.10 本体那两条文字**仍写着旧口径**，本轮只在 G35 与 §6.5 声明否证、未回改原行——否则 §3 会与 §5/§6 长期双源。解锁动作：删掉第 1 条或按 `where go` 改写；§3.10 第 2 条（git 行尾转换）本轮未复验 | |
+| G35 | §3.10 第 1 条「Go 工具链不在 PATH」已被实测否证（文档漂移）；另 DEPLOY.md 的 CF 段亦为漂移 | 锋 | **DONE（2026-10-14 r184 就地更正）** | — | **Go 侧**：`where go` → `C:\Program Files\Go\bin\go.exe`，`go version` = `go1.27.0 windows/amd64`，**在 PATH 上**，免绝对路径可直接 `go vet` / `go test`。§3.10 第 1 条写「不在 PATH」曾让我把 G15/G18/G22 误判为「本机不可执行」，三条假缺口由此产生。**DEPLOY.md 侧已在 G34 同轮改写**（`Git Provider = No`）。**r184 收口**：§3.10 两条**均已就地更正**并保留旧说法与代价（不再只在旁注声明否证——那正是本条登记的双源病灶）；第 2 条一并复验，发现「检出为 CRLF」与 `.gitattributes` 的 `eol=lf` 相反，真因是 PowerShell 写入产生 CRLF，且工作区行尾按文件不一致（`README.md` 全 CRLF vs `LICENSE`/`platforms.json`/`API.md` 全 LF）。**两条均已带可复算命令** | |
 
 #### §1.1 技能分级的依据（G7 为何必须分级）
 
@@ -220,10 +220,34 @@
 
 **风险。** 构建顺序错则 CI 必红（前端必须先构建、再构建 Go，因为 Go 侧内嵌前端产物）。
 
-### 3.10 环境事实（会咬人的两条）
+### 3.10 环境事实（两条均于 2026-10-14 就地更正；旧说法保留在「曾经的错误说法」里，不删）
 
-1. **Go 工具链不在 PATH。** 实测 `go` 命令不可直接调用，工具链位于固定绝对路径下（版本 go1.27.0 / windows / amd64）。本地构建脚本已在内部兜底，**CI 配置与安装文档必须同样兜底**。此项曾导致一次错误结论：早期只探测 PATH 就判「未安装」。
-2. **git 的行尾转换开启。** 仓库以 LF 存储、检出为 CRLF，属该平台默认行为，接受。
+1. **Go 工具链在 PATH 上。** 实测 `where go` → `C:\Program Files\Go\bin\go.exe`，`go version` → `go1.27.0 windows/amd64`，
+   **免绝对路径直接调用即可**（`go env GOVERSION` / `go vet ./...` / `go test -count=1 ./...` 均 rc=0）。
+   本地构建脚本仍保留多路径兜底（`agent/build.sh` 覆盖 mac/linux 的 homebrew、`/usr/local/go`、snap 等），
+   那部分**没问题**、应保留——脚本要跨平台，文档只描述本机。
+
+   > **曾经的错误说法（本条即其来源）**：「Go 工具链不在 PATH，实测 `go` 不可直接调用。」
+   > **它造成的实际损失**：本轮据此把 G15 / G18 / G22 三条 Go 腿判成「本机不可执行、只能靠 CI」，
+   > 写进 §5 后又据此判定「未执行」。三腿实为随时可跑，18 个 test 一次全绿。**一条错的环境事实，
+   > 顺着 §5 判据链放大成了三项假缺口。** 更早还导致过一次「未安装」的误判。
+
+2. **仓库以 LF 存储；但工作区行尾按文件不一致，且 PowerShell 写入会产生 CRLF。** 实测：仓库内 blob 为纯 LF
+   （`git show HEAD:docs/ROADMAP.part1.md` → CRLF=0 / LF=5465）；`.gitattributes` 末行为 `* text=auto eol=lf`
+   ⇒ 正常检出应为 LF；本地 `core.autocrlf = true`。**但工作区并不统一**：实测 `README.md` CRLF=244/LF=0，
+   而 `LICENSE` LF=21、`platforms.json` LF=159、`docs/API.md` LF=403 全为纯 LF。
+
+   > **曾经的错误说法**：「仓库以 LF 存储、检出为 CRLF，属平台默认行为，接受。」前半句对，**后半句与
+   > `.gitattributes` 的 `eol=lf` 相反**。真实成因是另一件事：**PowerShell 的 `Set-Content` / `Add-Content`
+   > 写 CRLF**——本轮用它生成的 `ROADMAP.part1.md` 实测 **CRLF=99 / LF=1（同一文件内混行尾）**，
+   > `git add` 随即报 `CRLF will be replaced by LF`。也就是说工作区里的 CRLF 大多不是 git 检出带来的，
+   > 而是本地编辑器/脚本写进去的。
+   >
+   > **为什么这不是吹毛求疵**：`.gitattributes` 里那个 `agent/internal/seed/pack/** -text` 的例外，
+   > 就是同一个坑的历史伤疤——种子包的 SHA-256 是逐字节算的，行尾一转换，Windows 与 CI 的哈希就对不上，
+   > 预播种完整性校验会在与代码无关的地方红。**推论（务必遵守）：任何拿「工作区字节」算哈希或做逐字节比对的判据，
+   > 对文本文件在 Windows 上必错**——要么走 git 取 blob，要么先确认该路径已被 `-text` 排除。
+   > `site/404.html` 与 `docs/DEPLOY.md` 本轮用编辑器工具写入，实测为纯 LF，可作对照。
 
 ---
 
@@ -258,16 +282,21 @@ M5 私有侧治理  盘面 B 两问题
 
 ## 5. 预期成果与验收标准
 
-> **段首硬前置（2026-10-14 r181 立规）：判据落笔前必须实跑该命令，并把它回显的 rc / 关键读数抄进本表。**
+> **段首硬前置（2026-10-14 r181 立规 · r184 升为常设决定）：判据落笔前必须实跑该命令，并把它回显的 rc / 关键读数抄进本表。**
+>
+> **常设决定，不得降级为「建议」「最佳实践」或「按需」。** 依据：2026-10-14 由老大明确要求保持此条与
+> `win-toolchain-pitfalls` §9.6 **不降级**。降级它需要一次显式拍板并改写本行，不得由后续维护者顺手删。
+> 触发降级的唯一正当情形是它开始**频繁误报**——届时应改判据形态，而不是悄悄去掉「实跑」这步。
 >
 > 这不是文风偏好，是被证伪过三次的：r181 一轮里 §1 有三处表述在实跑下当场失效——G4 的「5 条变异腿」实为 4 条（1 正例 + 3 变异）；
 > `platform_parity.py` 与 `verify_seed_manifest.py` **没有 `--selftest`**（实跑 `rc=2` usage 报错，照着写就是一条只能失败的判据）；
-> `gh` 被 0 字节 shim 遮蔽，直接调用报 `Cannot run a document in the middle of a pipeline`。详见 §6.2。
+> `gh` 被 0 字节 shim 遮蔽，直接调用报 `Cannot run a document in the middle of a pipeline`。详见 part1 §6.2。
 >
-> 配套三条同源于此的纪律：**①** 命令连同解释器绝对路径一起写（实测系统 3.13.12 无 pytest、须用 managed venv），
+> **配套四条同源于此的纪律**：**①** 命令连同解释器绝对路径一起写（实测系统 3.13.12 无 pytest、须用 managed venv），
 > 否则判据在**别人的机器上**以不同方式失败；**②** 判据本身要有**阳性对照**——注入一个已知样本确认它真的会命中，
 > 排除恒不命中的假绿；**③** 命令报错返回空结果时，一律先判「命令失效」再判「零命中」，
-> 转义写错的扫描会静默产出 0，把「没查到」说成「不存在」。
+> 转义写错的扫描会静默产出 0，把「没查到」说成「不存在」；**④** 环境事实入表前必须实跑复核——错的环境事实
+> 会顺着判据链放大成假缺口（§3.10 第 1 条曾把三条可跑的 Go 腿判成「只能靠 CI」，见该条下的说明）。
 
 | 任务 | 可复算判据 |
 |---|---|
@@ -322,7 +351,9 @@ M5 私有侧治理  盘面 B 两问题
 > 下沉原因 = G30 文档体量治理：本轮三改后本文件曾达 60 KB，而 §6 属「查现状时不必读」的过程面。
 >
 > - **要看当前状态** → 读本文件 §1（任务台账）/ §2（优先级）/ §5（验收判据）。
-> - **要看取证过程、被否证的旧断言、投放前后对照** → 读 [part1 §6.2](ROADMAP.part1.md) / §6.5 / §6.6。
-> - §6.5 记着三处**已被实测否证**的旧断言（Go 不在 PATH / 本地 exe 缺 export / 内嵌 dist 陈旧），
->   §6.6 记着一次**静默失败**的投放（只加 _routes.json 时 Cloudflare 无声忽略）。
-  这些断言散落在 §1 / §3 / DEPLOY.md 正文里，本轮只声明不回改——**引用它们时必须连否证结论一起读**。
+> - **要看取证过程、被否证的旧断言、投放前后对照** → 读 [part1 §6.2](ROADMAP.part1.md) / §6.5 / §6.6 / §6.7。
+> - §6.5 记着三处**已被实测否证**的旧断言（Go 不在 PATH / 本地 exe 缺 export / 内嵌 dist 陈旧）；
+>   §6.6 记着一次**静默失败**的投放（只加 `_routes.json` 时 Cloudflare 无声忽略）；
+>   §6.7 记着两条纪律升为**常设决定**，以及 §3.10 两条环境事实的就地更正。
+> - 其中 §3.10 两条**已在 r184 就地更正**（旧说法与代价一并留在该条下），其余仍以「声明 + 旁注」并存——
+>   **引用这些断言时必须连否证结论一起读。**
