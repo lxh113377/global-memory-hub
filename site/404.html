@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>404 — 焚诀 Global</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0d1117;
+        color: #e6edf3;
+        font: 16px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif;
+      }
+      main { text-align: center; padding: 2rem; }
+      h1 { margin: 0 0 .25rem; font-size: 3rem; letter-spacing: .02em; }
+      p { margin: 0 0 1.25rem; color: #8b949e; }
+      a { color: #58a6ff; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: .15em .45em;
+        font-size: .9em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>404</h1>
+      <p>这个地址没有对应的文件。</p>
+      <p><a href="/">回到首页</a> · <a href="/console/">打开控制台</a></p>
+      <p><small>本页由 <code>_routes.json</code> 的 <code>not_found_handling: 404-page</code> 触发；
+        若你是在校验资源是否存在，请以状态码为准，不要看响应体。</small></p>
+    </main>
+  </body>
+</html>

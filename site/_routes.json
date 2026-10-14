@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/@cloudflare/pages-utils/schema.json",
+  "routes": [
+    {
+      "path": "/*",
+      "not_found_handling": "404-page"
+    }
+  ]
+}
