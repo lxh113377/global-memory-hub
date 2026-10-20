@@ -24,3 +24,8 @@ scripts/sanitize.local.json
 # OS / editor
 Thumbs.db
 .DS_Store
+
+# local verification scratch (never committed)
+.gocache/
+.gopath/
+.dl/

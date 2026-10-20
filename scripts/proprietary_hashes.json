@@ -1,0 +1,16 @@
+{
+  "schema": "fenjue-proprietary-hash-v1",
+  "_note": "专有内容指纹（正文口径：去 YAML frontmatter + 统一行尾后取 sha256）。为什么不用整文件哈希——本地/上游只差 frontmatter 的版本号与 last_updated，整文件哈希会因此漏判；复算口径见 build_seed.strip_frontmatter_for_hash。指纹来源=2026-10-20 gh api + 本地实测（三侧同值）。",
+  "entries": [
+    {
+      "id": "anthropics/skills doc-coauthoring SKILL.md",
+      "sha256": "cdc0afd5dccbe0731d74ef86ff60c3e79b9b477a37ebc7be375d4cec8aa18046",
+      "raw_file_sha256": "acb9b89b228fb818ffe2f464e40b1cdbf6948b50ceeeb7378f0e5b9d78c996ad",
+      "body_bytes": 15341,
+      "license": "Anthropic 专有（上游 skills/doc-coauthoring/LICENSE.txt）：明文禁止复制、创建衍生作品、分发/再许可/转让、在 Services 外留存副本",
+      "evidence": "2026-10-20 实测：正文指纹三侧一致（公开 pack == 上游 == D:/global_skills 私有源），40 字符滑窗重合 15071/15071 = 100%",
+      "action": "block",
+      "disposition": "已从 build_seed.CANDIDATES 移出；转 docs/SKILLS-TIERS.md「上游引用档」（只登记来源，不分发文件）"
+    }
+  ]
+}

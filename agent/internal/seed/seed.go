@@ -25,7 +25,9 @@ type packReader interface {
 var packFS packReader = packEmbed
 
 // SeedVersion 当前种子包版本; 升级内容时 bump, 已有库不受影响(零覆盖)。
-const SeedVersion = "0.1.0"
+// 0.2.0（2026-10-20）：移除 doc-coauthoring —— 其正文与 Anthropic 专有件逐字节相同
+// （见 scripts/proprietary_hashes.json），公开分发被许可明文禁止，转 docs/SKILLS-TIERS.md 上游引用档。
+const SeedVersion = "0.2.0"
 
 // stampName 种子标记文件名, 写在库根内。
 const stampName = ".fenjue-seed"

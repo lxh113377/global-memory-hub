@@ -97,6 +97,8 @@ jobs:
         run: python3 scripts/check_version_sync.py --selftest
       - name: version sync (tag == product const, manifest == seed const, schema paired with config version)
         run: python3 scripts/check_version_sync.py
+      - name: proprietary license gate (verbatim-proprietary bodies must never be shipped)
+        run: python3 -m unittest discover -s tests -p "test_proprietary_gate.py" -v
       - name: seed manifest cross-check (second implementation, guards against self-consistent-but-wrong)
         run: python3 scripts/verify_seed_manifest.py
       - name: api contract selftest (a phantom endpoint and an undocumented route must both bite)

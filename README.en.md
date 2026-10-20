@@ -249,4 +249,4 @@ Full eight-dimension comparison, with quantified gaps and the improvement backlo
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT (excluding third-party proprietary material; boundaries and admission rules in [NOTICE](NOTICE)). See [LICENSE](LICENSE).

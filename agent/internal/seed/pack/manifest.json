@@ -1,6 +1,6 @@
 {
   "schema": "fenjue-seed-manifest-v1",
-  "seed_version": "0.1.0",
+  "seed_version": "0.2.0",
   "files": [
     {
       "path": "memory/MEMORY.md",
@@ -66,11 +66,6 @@
       "path": "skills/diagram-maker/references/svg-template.md",
       "sha256": "3a8b47dbaeb341377a4999ff227f088a3a7fe2bee7b1353929f11a1f30b20c71",
       "bytes": 1930
-    },
-    {
-      "path": "skills/doc-coauthoring/SKILL.md",
-      "sha256": "2e47d78846faeea4a56e9809c52700087a15a2155a3f293a3efbaded81398ef4",
-      "bytes": 15815
     },
     {
       "path": "skills/first-principles-decomposer/SKILL.md",

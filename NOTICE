@@ -1,0 +1,27 @@
+# NOTICE — 第三方内容与许可边界
+
+本仓库整体以 MIT 发布（见 [LICENSE](LICENSE)）。MIT **不覆盖**下列第三方材料，
+它们不受本仓 LICENSE 授权，也不得随种子包（`agent/internal/seed/pack/`）分发：
+
+| 材料 | 上游 | 许可 | 本仓处置 |
+|---|---|---|---|
+| doc-coauthoring 技能正文 | [anthropics/skills](https://github.com/anthropics/skills) `skills/doc-coauthoring/` | **Anthropic 专有**：该目录 `LICENSE.txt` 明文禁止复制、创建衍生作品、分发/再许可/转让、在 Services 外留存副本 | 已于 2026-10-20 从种子包与发布产物中移除；仅在上游引用档登记来源，用户经官方渠道自行取得 |
+
+## 为什么单列这份文件
+
+种子包目录经 `go:embed` 打进发布二进制，而历史上一版种子包内含上述专有正文的**逐字副本**
+（正文 sha256 与上游一致，40 字符滑窗重合 15071/15071 = 100%）。在整体 MIT 的仓库里
+这样打包等于对下游做出超出实际授权的许可声明。现由两道机器判据防复发：
+
+1. `scripts/proprietary_hashes.json` + `build_seed.check_proprietary()` —— 命中登记指纹即整件丢弃；
+2. `tests/test_proprietary_gate.py` —— 门禁正反例、绕过测试（改 frontmatter / 自喂 sha 均不得逃逸），
+   已接入 CI 的 consistency job（阻断型）。
+
+清单缺失/为空/schema 不符时判据抛 `ProprietaryGateError`（判据面失效 ≠ 通过）。
+
+## 种子包的准入规则
+
+进 `agent/internal/seed/pack/` 的每一件必须同时满足：
+原创或许可允许再分发（MIT/BSD/Apache-2.0/CC0 等）；不在专有内容清单内；
+过身份/路径/凭据消毒与终检；在 docs/SKILLS-TIERS.md「可开源档」登记。
+其余一律走「上游引用档」：只登记来源与获取方式，不分发文件。

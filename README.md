@@ -241,4 +241,4 @@ Windows 上刻意不采用需要开发者模式或提权的符号链接形式。
 
 ## 许可
 
-MIT。详见 [LICENSE](LICENSE)。
+MIT（不含第三方专有内容，边界与准入规则见 [NOTICE](NOTICE)）。详见 [LICENSE](LICENSE)。

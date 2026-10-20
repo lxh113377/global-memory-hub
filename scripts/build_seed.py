@@ -48,7 +48,9 @@ CANDIDATES = [
     "debugging-fixing",
     "code-review",
     "writing-plans",
-    "doc-coauthoring",
+    # doc-coauthoring 于 2026-10-20 移出：正文与 anthropics/skills 专有件逐字节相同
+    # （sha256 2e47d788…，40 字符滑窗 15071/15071=100%），其 LICENSE.txt 明文禁止复制/衍生/分发；
+    # 属"引用不分发"档，见 docs/SKILLS-TIERS.md 上游引用档。
     "knowledge-capture",
     "data-analysis",
     "research-documentation",
@@ -301,6 +303,31 @@ def selftest() -> int:
         got = sanitize_text(src)
         if got != want:
             failures.append("sanitize | %r | want %r got %r" % (src[:40], want, got))
+    # 许可门禁正反例：命中必须咬、不命中不得误报、清单坏必须抛（判据恒绿=没门禁）
+    try:
+        entries = load_proprietary_blocklist()
+    except ProprietaryGateError as exc:
+        failures.append("blocklist | %s" % exc)
+        entries = []
+    if entries:
+        fake = b"selftest-payload-not-upstream"
+        if check_proprietary(fake) is not None:
+            failures.append("license | 非命中内容被误报")
+        # 构造一个 sha 命中登记值的假正文（用临时清单注入，不依赖私有源也能验"真会咬"）
+        marker = b"proprietary-gate-bite-check"
+        biting = [{"id": "fixture", "sha256": body_sha256(marker), "license": "test", "action": "block"}]
+        if check_proprietary(marker, biting) is None:
+            failures.append("license | 已知专有指纹未被识别（比对逻辑失效）")
+        # 反例：只改 frontmatter 不得改变指纹（否则整文件哈希会漏判）
+        if body_sha256(b"---\nversion: 1.0.0\n---\nBODY\n") != body_sha256(b"---\nversion: 9.9.9\nlast_updated: x\n---\nBODY\n"):
+            failures.append("license | frontmatter 参与了指纹（改版本号即可绕过门禁）")
+    else:
+        failures.append("blocklist | entries 为空")
+    try:
+        load_proprietary_blocklist(REPO / "scripts" / "no-such-blocklist.json")
+        failures.append("blocklist | 缺失清单被判通过（应抛 ProprietaryGateError）")
+    except ProprietaryGateError:
+        pass
     if failures:
         for f in failures:
             print("SELFTEST-FAIL %s" % f, file=sys.stderr)
@@ -323,6 +350,98 @@ def collect_files(skill_dir: Path) -> list[Path]:
     return [p for p in files if p.exists()]
 
 
+# ---------------------------------------------------------------------------
+# 4.5 许可门禁（2026-10-20 立）：专有逐字内容不得进种子包
+# ---------------------------------------------------------------------------
+# 存在理由：pack/ 随 go:embed 打进 public 仓的发布二进制。此前的门禁只扫身份/凭据/路径，
+# 没有任何一条看**许可**，于是 doc-coauthoring 正文（与 Anthropic 专有件逐字节相同）一路绿着
+# 进了 CI 与 5 个 release 资产。LICENSE.txt 明文禁止：复制、创建衍生作品、分发/再许可、
+# 在 Services 外留存副本。
+PROPRIETARY_LIST = REPO / "scripts" / "proprietary_hashes.json"
+PROPRIETARY_SCHEMA = "fenjue-proprietary-hash-v1"
+
+
+class ProprietaryGateError(RuntimeError):
+    """判据面不可用（清单缺失/坏/schema 不符/条目空）——绝不折算为通过（R247）。"""
+
+
+def load_proprietary_blocklist(path: Path = PROPRIETARY_LIST) -> list[dict]:
+    try:
+        doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ProprietaryGateError("proprietary blocklist missing: %s" % path) from exc
+    except (OSError, ValueError) as exc:
+        raise ProprietaryGateError("proprietary blocklist unreadable: %s (%s)" % (path, exc)) from exc
+    if doc.get("schema") != PROPRIETARY_SCHEMA:
+        raise ProprietaryGateError("blocklist schema %r, want %r" % (doc.get("schema"), PROPRIETARY_SCHEMA))
+    entries = doc.get("entries") or []
+    if not entries:
+        raise ProprietaryGateError("proprietary blocklist lists no entries (gate would be a no-op)")
+    for e in entries:
+        if not re.fullmatch(r"[0-9a-f]{64}", str(e.get("sha256") or "")):
+            raise ProprietaryGateError("blocklist entry %r has a non-sha256 digest" % e.get("id"))
+        if e.get("action", "block") != "block":
+            raise ProprietaryGateError("blocklist entry %r has unsupported action %r" % (e.get("id"), e.get("action")))
+    return entries
+
+
+PROPRIETARY_CACHE: list[dict] | None = None
+
+
+def proprietary_entries(force: bool = False) -> list[dict]:
+    """懒加载缓存：任何调用路径（main / selftest / 外部 import）都拿到同一份清单，
+    取不到就抛 ProprietaryGateError —— 绝不因未初始化而静默放行。"""
+    global PROPRIETARY_CACHE
+    if PROPRIETARY_CACHE is None or force:
+        PROPRIETARY_CACHE = load_proprietary_blocklist()
+    return PROPRIETARY_CACHE
+
+
+def body_sha256(payload: bytes) -> str:
+    """正文指纹口径：去 frontmatter + 统一行尾后取 sha256（与登记侧同一函数，防两把尺）。"""
+    return hashlib.sha256(strip_frontmatter_for_hash(payload)).hexdigest()
+
+
+def check_proprietary(payload: bytes, entries: list[dict] | None = None) -> dict | None:
+    """命中返回该条目，否则 None。
+
+    哈希在函数内部自算（调用方传不进"配好的 sha"，否则判据可被喂假 sha 绕过）；
+    比对按内容不按文件名——改名/挪路径都绕不过。
+    """
+    want = body_sha256(payload)
+    for e in (entries if entries is not None else proprietary_entries()):
+        if e["sha256"].lower() == want:
+            return e
+    return None
+
+
+def scan_pack_proprietary(pack_dir: Path, blocklist_path: Path = PROPRIETARY_LIST) -> list[str]:
+    """整包扫（含 manifest 自身以外的所有文件），返回命中的 '路径 == 条目id' 列表。"""
+    entries = load_proprietary_blocklist(blocklist_path)
+    offenders: list[str] = []
+    for p in sorted(Path(pack_dir).rglob("*")):
+        if not p.is_file() or p.name == "manifest.json":
+            continue
+        hit = check_proprietary(p.read_bytes(), entries)
+        _digest = None
+        if hit:
+            offenders.append("%s == %s (%s)" % (p.relative_to(pack_dir), hit["id"], hit["license"]))
+    return offenders
+
+
+def strip_frontmatter_for_hash(raw: bytes) -> bytes:
+    """按正文（去掉 YAML frontmatter、统一行尾与空白）取指纹。
+
+    为什么不能整文件哈希：本地件与上游只差 frontmatter（version/last_updated），
+    整文件哈希会因此漏判。这里与实测口径（40 字符滑窗）同向——比的是正文本体。
+    """
+    s = raw.decode("utf-8", errors="replace")
+    m = re.match(r"^\s*---\s*\n.*?\n---\s*\n", s, re.S)
+    body = s[m.end():] if m else s
+    body = body.replace("\r\n", "\n").replace("\r", "\n").replace("\ufeff", "")
+    return body.strip().lstrip("\ufeff").encode("utf-8")
+
+
 def stage_skill(name: str, skill_dir: Path, local: dict) -> tuple[list[tuple[Path, str]], str | None]:
     staged: list[tuple[Path, str]] = []
     for f in collect_files(skill_dir):
@@ -340,6 +459,10 @@ def stage_skill(name: str, skill_dir: Path, local: dict) -> tuple[list[tuple[Pat
             if f.name == "SKILL.md":
                 return [], "SKILL.md not utf-8"
             continue
+        # 许可门禁：正文级 sha256 命中专有清单 ⇒ 整件丢弃（改名/改路径都绕不过内容比对）
+        phit = check_proprietary(raw)
+        if phit is not None:
+            return [], "proprietary-verbatim (%s): %s" % (phit["id"], phit["license"])
         hits = scan(text, local)
         if hits:
             reason = ", ".join("%s=%r" % (k, v) for k, v in sorted(hits.items()))
@@ -377,6 +500,7 @@ def main() -> int:
         DEST.mkdir(parents=True)
 
     picked, dropped = [], []
+    proprietary_entries(force=True)  # 取不到即抛 ProprietaryGateError（不静默放行）
     for name in CANDIDATES:
         skill_dir = source / name
         if not (skill_dir / "SKILL.md").exists():
