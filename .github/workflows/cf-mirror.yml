@@ -1,0 +1,80 @@
+# cf-mirror: 把 Cloudflare Pages 镜像接进 CI（r182 建立）。
+#
+# 存在理由：CF Pages 项目 global-memory-hub 实测 Git Provider = No
+#   （r179 实测 deployment_trigger.type = ad_hoc）=> push main **不会**自动重部署镜像，
+#   只能靠人工 wrangler pages deploy。r178 因此攒出「线上 Source 指向孤儿 commit」的脱钩缺陷，
+#   是靠手工排查才发现的。本 workflow 让镜像跟主站同源自动更新。
+#
+# 凭据：需仓库 Secrets 配置 CLOUDFLARE_API_TOKEN（Cloudflare Pages:Edit 权限）。
+#   本仓当前 Actions secrets = 0，故本 workflow 在缺 token 时**显式跳过并告警**（不静默、
+#   也不判红）—— 加好 secret 即自动生效，无需改本文件。
+#   （同模式先例：lxh113377/supermarket-web 的 .github/workflows/ci.yml L453-490）
+#
+# 与 GitHub Pages 主站的关系：pages.yml 管主站（actions/deploy-pages）；本件只管 CF 镜像，
+#   两者产物同源（site/ + web/dist -> site-dist），互为冗余。
+name: cf-mirror
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cf-mirror
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 04b1466b2606b678a332fe6f26aa87ec
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 缺 token 时显式告警并跳过（不静默）
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: |
+          echo "::warning title=CF 镜像未部署::仓库未配置 CLOUDFLARE_API_TOKEN（Pages:Edit）—— CF 镜像本轮跳过，GitHub Pages 主站不受影响。"
+
+      - uses: actions/setup-node@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        with:
+          node-version: 22
+
+      - name: build web console
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: cd web && npm ci && npm run build
+
+      - name: assemble site (landing at /, console at /console/)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: |
+          mkdir -p site-dist/console
+          cp -r site/. site-dist/
+          cp -r web/dist/. site-dist/console/
+
+      # ⚠️ wrangler 4.x 必须把目录作**位置参数**传（r180 实测：
+      #   `cd site-dist && wrangler pages deploy --project-name X` 回
+      #   Must specify a directory of assets）；--production-branch 也不是 pages deploy 的参数。
+      - name: deploy to Cloudflare Pages（Source 锚到本次 commit）
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: |
+          npx --yes wrangler@4 pages deploy site-dist \
+            --project-name global-memory-hub \
+            --branch main \
+            --commit-hash ${{ github.sha }} \
+            --commit-message "cf-mirror: ${{ github.sha }}" \
+            --commit-dirty=true
+
+      # 镜像铁律验收（DEPLOY.md ⑤）：不存在的路径必须回真 404，
+      #   若回 200 + 根页体积说明 _routes.json 没被带上（症状与修复前相同，最易误读成已生效）。
+      - name: verify mirror 真 404 铁律
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: |
+          sleep 5
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://global-memory-hub.pages.dev/definitely-not-a-page-xyz)
+          echo "404 probe -> $code"
+          test "$code" = "404"
